@@ -5,7 +5,7 @@ based module to ease testing with files and dirs.
 
 =head1 SYNOPSIS
 
-  use Test::Expander;
+  use Path::Tiny qw( path );
   use Test::Files;
 
   my $got_file       = path( 'path' )->child( qw( got file ) );
@@ -15,7 +15,7 @@ based module to ease testing with files and dirs.
   my @file_list      = qw( expected file );
   my ( $content_check, $expected, $filter, $options );
 
-  plan( 9 );
+  plan( 22 );
 
   # Simply compares file contents to a string:
   $expected = "contents\nof file";
@@ -41,7 +41,7 @@ based module to ease testing with files and dirs.
   $options = { EXISTENCE_ONLY => 1 };
   compare_ok( $got_file, $reference_file, $options, 'both files exist' );
 
-  # Verifies if both got file and reference file have identical size:
+  # Verifies if got file and reference file have identical size:
   $options = { SIZE_ONLY => 1 };
   compare_ok( $got_file, $reference_file, $options, 'both files have identical size' );
 
@@ -66,7 +66,7 @@ based module to ease testing with files and dirs.
     "directory and its subdirectories have exactly the files in the list except of file 'must'"
   );
 
-  # Compares two directories comparing file contents:
+  # Compares two directories by comparing file contents (not recursively!):
   compare_dirs_ok(
     $got_dir, $reference_dir,
     "all files from '$got_dir' are the same in '$reference_dir' (same names, same contents), subdirs are skipped"
@@ -105,16 +105,17 @@ based module to ease testing with files and dirs.
   );
 
   # Two identical version of comparison of two directories by file contents,
-  # whereas these contents are first filtered so that time stamps in form of 'HH:MM:SS' are replaced by '00:00:00':
+  # whereas these contents are first filtered so that time stamps in form of 'HH:MM:SS' are replaced by '00:00:00'
+  # like in examples for file_filter_ok and compare_filter_ok:
   $filter  = sub { shift =~ s/ \b (?: [01] \d | 2 [0-3] ) : (?: [0-5] \d ) : (?: [0-5] \d ) \b /00:00:00/grx };
   $options = { FILTER => $filter };
   compare_dirs_ok(
     $got_dir, $reference_dir, $options,
-    "all files from '$got_dir' are the same in '$reference_dir', subdirs are skipped, differences if time stamps ignored"
+    "all files from '$got_dir' are the same in '$reference_dir', subdirs are skipped, differences of time stamps ignored"
   );
   compare_dirs_filter_ok(
     $got_dir, $reference_dir, $filter,
-    "all files from '$got_dir' are the same in '$reference_dir', subdirs are skipped, differences if time stamps ignored"
+    "all files from '$got_dir' are the same in '$reference_dir', subdirs are skipped, differences of time stamps ignored"
   );
 
   # Verifies if all plain files in directory and its subdirectories contain the word 'good'
@@ -170,7 +171,7 @@ If you want to exclude the line from consideration, return empty string or B<und
 
 Compares the contents of a file B<$got_file> to a string B<$expected_string>.
 
-In the most generic form (i.e. if the 3rd parameter B<\%options>) is passed and contains the key B<FILTER>,
+In the generic form (i.e. if the 3rd parameter B<\%options> is passed and contains the key B<FILTER>)
 B<file_ok> provides the same functionality as B<file_filter_ok>.
 
 =head4 Supported options
@@ -207,7 +208,7 @@ This function is deprecated and stays for backward compatibility reasons only.
 
 Compares two files.
 
-In the most generic form (i.e. if the 3rd parameter B<\%options>) is passed and contains the key B<FILTER>,
+In the generic form (i.e. if the 3rd parameter B<\%options> is passed and contains the key B<FILTER>)
 B<compare_ok> provides the same functionality as B<compare_filter_ok>.
 
 =head4 Supported options
@@ -216,7 +217,7 @@ B<compare_ok> provides the same functionality as B<compare_filter_ok>.
 
 =item B<EXISTENCE_ONLY>
 
-Boolean. If set to B<true>, only existence of both B<$got_file> and B<$reference_file> is tested.
+Boolean. If set to B<true>, only existence of both B<$got_file> and B<$reference_file> is compared.
 
 Defaults to B<false>.
 
@@ -262,7 +263,7 @@ if recursive appraoch is required (see the option B<RECURSIVE> below).
 Special files like named pipes are involved in the verification only if the sole file existence is required
 (see the option B<EXISTENCE_ONLY> below), otherwise they are skipped and reported as error.
 
-In the most generic form i.e. if the 3rd parameter B<\%options> is passed and
+In the generic form i.e. if the 3rd parameter B<\%options> is passed and
 contains the key B<SYMMETRIC> set to B<true>, B<dirs_contains_ok> provides the same functionality
 as B<dir_contains_only_ok>.
 
@@ -310,7 +311,7 @@ This function is deprecated and stays for backward compatibility reasons only.
 
 Compares (not following symlinks!) all files in two directories reporting differences.
 
-In the most generic form i.e. if the 3rd parameter B<\%options> is passed and contains the key B<FILTER>,
+In the generic form (i.e. if the 3rd parameter B<\%options> is passed and contains the key B<FILTER>)
 B<compare_dirs_ok> provides the same functionality as B<compare_dirs_filter_ok>.
 
 =head4 Supported options
@@ -369,7 +370,7 @@ Defaults to B<Unified>.
 
 =head3 compare_dirs_filter_ok( $got_dir, $reference_dir, \&filter_func, $test_name )
 
-Works like B<compare_dirs_ok> with option B<FILTER> i.e. calls a filter function on each line of every file,
+Works like B<compare_dirs_ok> with option B<FILTER> i.e. calls a filter function on each line of every file
 allowing you to exclude or alter some text to avoid spurious failures (like timestamp disagreements).
 
 This function is deprecated and stays for backward compatibility reasons only.
@@ -400,7 +401,7 @@ and L<Test::Builder|https://metacpan.org/pod/Test::Builder> for more testing hel
 This module really just adds functions to what L<Test2::V0|https://metacpan.org/pod/Test2::V0> does.
 As recommended by the author of L<Test::More|https://metacpan.org/pod/Test::More>
 and L<Test2::V0|https://metacpan.org/pod/Test2::V0>, the latter module should be preferred,
-that's why L<Test::More|https://metacpan.org/pod/Test::More> is listed neither in L</SYNOPSIS> nor in L</DEPENDENCIES>.
+that's why L<Test::More|https://metacpan.org/pod/Test::More> is not listed in L</SYNOPSIS>.
 
 =head1 BUGS
 
@@ -414,8 +415,7 @@ Jurij Fajnberg, E<lt>fajnbergj@gmail.comE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2003-2007 by Phil Crow
-Copyright 2024 by Jurij Fajnberg
+Copyright 2003-2007 by Phil Crow and 2020-2024 by Jurij Fajnberg
 
 This module is free software; you can redistribute it and/or modify
 it under the same terms as the Perl 5 programming language system itself.

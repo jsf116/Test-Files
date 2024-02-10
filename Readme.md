@@ -4,8 +4,8 @@
 based module to ease testing with files and dirs.
 
 # SYNOPSIS
-
-    use Test::Expander;
+```perl
+    use Path::Tiny qw( path );
     use Test::Files;
 
     my $got_file       = path( 'path' )->child( qw( got file ) );
@@ -15,7 +15,7 @@ based module to ease testing with files and dirs.
     my @file_list      = qw( expected file );
     my ( $content_check, $expected, $filter, $options );
 
-    plan( 9 );
+    plan( 22 );
 
     # Simply compares file contents to a string:
     $expected = "contents\nof file";
@@ -32,8 +32,8 @@ based module to ease testing with files and dirs.
     compare_ok( $got_file, $reference_file, 'files are the same' );
 
     # Two identical variants comparing contents of two files ignoring differences in time stamps:
-    $filter   = sub { shift =~ s/ \b (?: [01] \d | 2 [0-3] ) : (?: [0-5] \d ) : (?: [0-5] \d ) \b /00:00:00/grx };
-    $options  = { FILTER => $filter };
+    $filter  = sub { shift =~ s/ \b (?: [01] \d | 2 [0-3] ) : (?: [0-5] \d ) : (?: [0-5] \d ) \b /00:00:00/grx };
+    $options = { FILTER => $filter };
     compare_ok       ( $got_file, $reference_file, $options, 'files are almost the same' );
     compare_filter_ok( $got_file, $reference_file, $filter,  'files are almost the same' );
 
@@ -41,7 +41,7 @@ based module to ease testing with files and dirs.
     $options = { EXISTENCE_ONLY => 1 };
     compare_ok( $got_file, $reference_file, $options, 'both files exist' );
 
-    # Verifies if both got file and reference file have identical size:
+    # Verifies if got file and reference file have identical size:
     $options = { SIZE_ONLY => 1 };
     compare_ok( $got_file, $reference_file, $options, 'both files have identical size' );
 
@@ -50,8 +50,7 @@ based module to ease testing with files and dirs.
     dir_contains_ok( $got_dir, $expected, 'directory has all files in list' );
 
     # Two identical variants doing the same verification as before,
-    # but additionally verifying if the directory has nothing except of expected files;
-    # in other words verifying if the directory has exactly the files in the list (not recursively!):
+    # but additionally verifying if the directory has nothing but the expected files (not recursively!):
     $options = { SYMMETRIC => 1 };
     dir_contains_ok     ( $got_dir, $expected, $options, 'directory has exactly the files in the list' );
     dir_only_contains_ok( $got_dir, $expected,           'directory has exactly the files in the list' );
@@ -67,8 +66,7 @@ based module to ease testing with files and dirs.
       "directory and its subdirectories have exactly the files in the list except of file 'must'"
     );
 
-    # Compares two directories in terms specified by the called.
-    # These can be comparison by file contents (default), by file existence, or by file size:
+    # Compares two directories by comparing file contents (not recursively!):
     compare_dirs_ok(
       $got_dir, $reference_dir,
       "all files from '$got_dir' are the same in '$reference_dir' (same names, same contents), subdirs are skipped"
@@ -107,23 +105,25 @@ based module to ease testing with files and dirs.
     );
 
     # Two identical version of comparison of two directories by file contents,
-    # whereas these contents are first filtered so that time stamps in form of 'HH:MM:SS' are replaced by '00:00:00':
+    # whereas these contents are first filtered so that time stamps in form of 'HH:MM:SS' are replaced by '00:00:00'
+    # like in examples for file_filter_ok and compare_filter_ok:
     $filter  = sub { shift =~ s/ \b (?: [01] \d | 2 [0-3] ) : (?: [0-5] \d ) : (?: [0-5] \d ) \b /00:00:00/grx };
     $options = { FILTER => $filter };
     compare_dirs_ok(
       $got_dir, $reference_dir, $options,
-      "all files from '$got_dir' are the same in '$reference_dir', subdirs are skipped, differences if time stamps ignored"
+      "all files from '$got_dir' are the same in '$reference_dir', subdirs are skipped, differences of time stamps ignored"
     );
     compare_dirs_filter_ok(
       $got_dir, $reference_dir, $filter,
-      "all files from '$got_dir' are the same in '$reference_dir', subdirs are skipped, differences if time stamps ignored"
+      "all files from '$got_dir' are the same in '$reference_dir', subdirs are skipped, differences of time stamps ignored"
     );
 
-    # Verifies if all plain files in directory and its subdirectories contain the word 'good':
-    $content_check = sub { path( shift )->slurp =~ / \b good \b /x };
+    # Verifies if all plain files in directory and its subdirectories contain the word 'good'
+    # (take into consideration the -f test below excluding special files from comparison!):
+    $content_check = sub { my ( $file ) = @_; ! -f $file or path( $file )->slurp =~ / \b good \b /x };
     $options       = { RECURSIVE => 1 };
     find_ok( $got_dir, $content_check, $options, "all files from '$got_dir' and subdirectories contain the word 'good'" );
-
+```
 # DESCRIPTION
 
 This module is like [Test2::V0](https://metacpan.org/pod/Test2::V0) or
@@ -144,45 +144,34 @@ This makes it much more likely that your tests will pass on a different operatin
 All of the contents comparison routines provide diff diagnostic output when they report failure.
 The diff output style can be changed using the option **STYLE** (see below).
 
-Most of the functions are self explanatory.
-One exception is `compare_dirs_filter_ok` which compares two directory trees,
-like `compare_dirs_ok` in its simplest form (i.e. without options) but with a twist.
-The twist is a filter which each line is fed through before comparison.
-This might be useful because some files are really the same, but look different textually.
-In particular, comparing files with machine generated dates you can detect that
-everything in them was identical, except those dates.
-
 The filter function receives each line of each file.
 It may perform any necessary transformations (like excising dates),
 then it must return the line in (possibly) transformed state.
 For example, the first filter of [Phil Crow, the creator of this module](https://metacpan.org/author/PHILCROW) was
-
+```perl
     sub chop_dates {
       my $line = shift;
       $line =~ s/\d{4}(.\d\d){5}//g;
       return $line;
     }
-
+```
 that could be shortened and slightly optimized as
-
+```perl
     sub { shift =~ s/ \d{4} (?: \. \d\d ){5} //grx }
-
+```
 This removes all strings like 2003.10.14.14.17.37.
 Everything else is unchanged and failing tests started passing when they should.
-If you want to exclude the line from consideration, return empty string (**''**)
-(do not return **undef**, that makes it harder to chain filters together and might lead to warnings).
-
-`compare_filter_ok` and `file_filter_ok` work in a similar manner for a single file comparison.
+If you want to exclude the line from consideration, return empty string or **undef**.
 
 ## FUNCTIONS
 
-### file\_ok( $got\_file, $expected\_string, $test\_name )
+### file\_ok( $got\_file, $expected\_string,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; $test\_name )
 
 ### file\_ok( $got\_file, $expected\_string, \\%options, $test\_name )
 
 Compares the contents of a file **$got\_file** to a string **$expected\_string**.
 
-In the most generic form (i.e. if the 3rd parameter **\\%options**) is passed and contains the key **FILTER**,
+In the generic form (i.e. if the 3rd parameter **\\%options** is passed and contains the key **FILTER**)
 **file\_ok** provides the same functionality as **file\_filter\_ok**.
 
 #### Supported options
@@ -209,20 +198,20 @@ but filters the file first. The string contents must be filtered before if neces
 
 This function is deprecated and stays for backward compatibility reasons only.
 
-### compare\_ok( $got\_file, $reference\_file, $test\_name )
+### compare\_ok( $got\_file, $reference\_file,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; $test\_name )
 
 ### compare\_ok( $got\_file, $reference\_file, \\%options, $test\_name )
 
 Compares two files.
 
-In the most generic form (i.e. if the 3rd parameter **\\%options**) is passed and contains the key **FILTER**,
+In the generic form (i.e. if the 3rd parameter **\\%options** is passed and contains the key **FILTER**)
 **compare\_ok** provides the same functionality as **compare\_filter\_ok**.
 
 #### Supported options
 
 - **EXISTENCE\_ONLY**
 
-    Boolean. If set to **true**, only existence of both **$got\_file** and **$reference\_file** is tested.
+    Boolean. If set to **true**, only existence of both **$got\_file** and **$reference\_file** is compared.
 
     Defaults to **false**.
 
@@ -266,7 +255,7 @@ if recursive appraoch is required (see the option **RECURSIVE** below).
 Special files like named pipes are involved in the verification only if the sole file existence is required
 (see the option **EXISTENCE\_ONLY** below), otherwise they are skipped and reported as error.
 
-In the most generic form i.e. if the 3rd parameter **\\%options** is passed and
+In the generic form i.e. if the 3rd parameter **\\%options** is passed and
 contains the key **SYMMETRIC** set to **true**, **dirs\_contains\_ok** provides the same functionality
 as **dir\_contains\_only\_ok**.
 
@@ -282,7 +271,7 @@ as **dir\_contains\_only\_ok**.
 
     String containing RegEx. Files with base names not matching this RegEx will be skipped.
 
-    Defaults to **.** i.e. no file will be skipped.
+    Defaults to the dot sign (**.**) i.e. no file will be skipped.
 
 - **RECURSIVE**
 
@@ -304,13 +293,13 @@ that the listed files are present and that they are the only ones present.
 
 This function is deprecated and stays for backward compatibility reasons only.
 
-### compare\_dirs\_ok( $got\_dir, $reference\_dir, $test\_name )
+### compare\_dirs\_ok( $got\_dir, $reference\_dir,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; $test\_name )
 
 ### compare\_dirs\_ok( $got\_dir, $reference\_dir, \\%options, $test\_name )
 
 Compares (not following symlinks!) all files in two directories reporting differences.
 
-In the most generic form i.e. if the 3rd parameter **\\%options** is passed and contains the key **FILTER**,
+In the generic form (i.e. if the 3rd parameter **\\%options** is passed and contains the key **FILTER**)
 **compare\_dirs\_ok** provides the same functionality as **compare\_dirs\_filter\_ok**.
 
 #### Supported options
@@ -336,7 +325,7 @@ In the most generic form i.e. if the 3rd parameter **\\%options** is passed and 
     String containing RegEx.
     Files with base names not matching this RegEx will be skipped both in **$got\_dir** and **$reference\_dir**.
 
-    Defaults to **.** i.e. no file will be skipped.
+    Defaults to the dot sign (**.**) i.e. no file will be skipped.
 
 - **RECURSIVE**
 
@@ -357,16 +346,22 @@ In the most generic form i.e. if the 3rd parameter **\\%options** is passed and 
 
     Defaults to **false**.
 
+- All options supported by [Text::Diff](https://metacpan.org/pod/Text::Diff)
+except of **FILENAME\_A** and **FILENAME\_B**.
+
+    The most useful of them is **STYLE** defining the style of output for content differences.
+    Defaults to **Unified**.
+
 ### compare\_dirs\_filter\_ok( $got\_dir, $reference\_dir, \\&filter\_func, $test\_name )
 
-Works like **compare\_dirs\_ok** with option **FILTER** i.e. calls a filter function on each line of every file,
+Works like **compare\_dirs\_ok** with option **FILTER** i.e. calls a filter function on each line of every file
 allowing you to exclude or alter some text to avoid spurious failures (like timestamp disagreements).
 
 This function is deprecated and stays for backward compatibility reasons only.
 
-### find\_ok( $got\_dir, \\&find\_func, \\%options, $test\_name )
+### find\_ok( $got\_dir, \\&content\_check\_func, \\%options, $test\_name )
 
-Verifies if the condition passed as code reference **\\&find\_func** is true for all files in directory **$got\_dir**.
+Verifies if the condition passed as code reference **\\&content\_check\_func** is true for all files in directory **$got\_dir**.
 The code reference returning boolean is called for any type of file except of directory
 i.e. for symlinks, devices, etc and the only parameter is the full-qualified file name.
 If you want to consider plain files only, you must apply the test operator **-f** to the parameter.
@@ -386,7 +381,7 @@ and [Test::Builder](https://metacpan.org/pod/Test::Builder) for more testing hel
 This module really just adds functions to what [Test2::V0](https://metacpan.org/pod/Test2::V0) does.
 As recommended by the author of [Test::More](https://metacpan.org/pod/Test::More)
 and [Test2::V0](https://metacpan.org/pod/Test2::V0), the latter module should be preferred,
-that's why [Test::More](https://metacpan.org/pod/Test::More) is listed neither in ["SYNOPSIS"](#synopsis) nor in ["DEPENDENCIES"](#dependencies).
+that's why [Test::More](https://metacpan.org/pod/Test::More) is not listed in ["SYNOPSIS"](#synopsis).
 
 # BUGS
 
@@ -400,8 +395,7 @@ Jurij Fajnberg, <fajnbergj@gmail.com>
 
 # COPYRIGHT AND LICENSE
 
-Copyright 2003-2007 by Phil Crow
-Copyright 2024 by Jurij Fajnberg
+Copyright 2003-2007 by Phil Crow and 2020-2024 by Jurij Fajnberg
 
 This module is free software; you can redistribute it and/or modify
 it under the same terms as the Perl 5 programming language system itself.
