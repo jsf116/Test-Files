@@ -1,0 +1,76 @@
+{
+   "abstract" : "A Test::Builder based Perl module to ease testing with files and dirs.",
+   "author" : [
+      "Jurij Fajnberg <fajnbergj@gmail.com>"
+   ],
+   "dynamic_config" : 0,
+   "generated_by" : "JSF",
+   "license" : [
+      "perl_5"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : "2"
+   },
+   "name" : "Test-Files",
+   "no_index" : {
+      "directory" : [
+         "t"
+      ]
+   },
+   "prereqs" : {
+      "build" : {
+         "requires" : {
+            "ExtUtils::MakeMaker" : "0",
+            "Test::Simple" : "0"
+         }
+      },
+      "develop" : {
+         "suggests" : {
+            "App::Software::License" : "0",
+            "App::cpanminus" : "1.7046"
+         }
+      },
+      "runtime" : {
+         "requires" : {
+            "Const::Fast" : "0",
+            "Exporter" : "0",
+            "Fcntl" : "0",
+            "PadWalker" : "0",
+            "Path::Tiny" : "0.144",
+            "Test::Builder" : "0",
+            "Text::Diff" : "0",
+            "perl" : "5.008009"
+         }
+      },
+      "test" : {
+         "requires" : {
+            "FindBin" : "0",
+            "Test::Expander" : "0",
+            "Test::Simple" : "0"
+         }
+      }
+   },
+   "provides" : {
+      "Test::Files" : {
+         "file" : "lib/Test/Files.pm",
+         "version" : "0.16"
+      },
+      "Test::Files::Constants" : {
+         "file" : "lib/Test/Files/Constants.pm",
+         "version" : "0.16"
+      }
+   },
+   "release_status" : "stable",
+   "resources" : {
+      "bugtracker" : {
+         "web" : "https://github.com/jsf116/Test-Files/issues"
+      },
+      "repository" : {
+         "type" : "git",
+         "url" : "git://github.com/jsf116/Test-Files.git",
+         "web" : "https://github.com/jsf116/Test-Files"
+      }
+   },
+   "version" : "0.16"
+}

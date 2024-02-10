@@ -1,0 +1,37 @@
+---
+abstract: 'Expansion of test functionalities that appear to be frequently used while testing.'
+author:
+  - 'Jurij Fajnberg <fajnbergj@gmail.com>'
+build_requires:
+  ExtUtils::MakeMaker: '0'
+  Test::Simple: '0'
+dynamic_config: 0
+generated_by: 'JSF'
+license: perl
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: '1.4'
+name: Test-Files
+no_index:
+  directory:
+    - t
+provides:
+  Test::Files:
+    file: lib/Test/Files.pm
+    version: '0.16'
+  Test::Files::Constants:
+    file: lib/Test/Files/Constants.pm
+    version: '0.16'
+requires:
+  Const::Fast: '0'
+  Exporter: '0'
+  Fcntl: '0'
+  PadWalker: '0'
+  Path::Tiny: '0.144'
+  Test::Builder: '0'
+  Text::Diff: '0'
+  perl: '5.008009'
+resources:
+  bugtracker: https://github.com/jsf116/Test-Files
+  repository: git://github.com/jsf116/Test-Files.git
+version: '0.16'
