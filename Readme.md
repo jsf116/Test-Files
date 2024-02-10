@@ -391,11 +391,14 @@ Please report any bugs or feature requests through the web interface at
 # AUTHOR
 
 Phil Crow, <philcrow2000@yahoo.com>
+
 Jurij Fajnberg, <fajnbergj@gmail.com>
 
 # COPYRIGHT AND LICENSE
 
-Copyright 2003-2007 by Phil Crow and 2020-2024 by Jurij Fajnberg
+Copyright 2003-2007 by Phil Crow
+
+Copyright 2020-2024 by Jurij Fajnberg
 
 This module is free software; you can redistribute it and/or modify
 it under the same terms as the Perl 5 programming language system itself.
