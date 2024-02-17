@@ -44,7 +44,7 @@ const our $FMT_UNEXPECTED          => "Unexpectedly saw: '%s'";
 
 const our $UNKNOWN                 => '<unknown>';
 
-const our %DIFF_OPTIONS             => (
+const our %DIFF_OPTIONS            => (
   CONTEXT     => 3,                                         # change this one later if needed
   FILENAME_A  => 'Got',
   FILENAME_B  => 'Expected',
