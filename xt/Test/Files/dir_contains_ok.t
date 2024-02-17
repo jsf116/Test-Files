@@ -3,7 +3,6 @@ use warnings
   FATAL    => qw( all ),
   NONFATAL => qw( deprecated exec internal malloc newline once portable redefine recursion uninitialized );
 
-use Test::Builder;
 use Test::Expander;
 
 my $diag;

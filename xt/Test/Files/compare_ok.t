@@ -3,8 +3,7 @@ use warnings
   FATAL    => qw( all ),
   NONFATAL => qw( deprecated exec internal malloc newline once portable redefine recursion uninitialized );
 
-use Test::Builder;
-use Test::Expander -tempdir => {};
+use Test::Expander -color => { exported => 'cyan', unexported => 'magenta' }, -tempdir => {};
 
 my ( $args_valid, $expected, $file_diff, $files_info );
 my $mock_this = mock $CLASS => (

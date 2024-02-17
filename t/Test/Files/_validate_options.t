@@ -6,16 +6,17 @@ use warnings
 use Test::Expander;
 
 use Test::Files::Constants qw(
-  $COMPARE_DIRS_OPTIONS $FMT_FILTER_ISNT_CODEREF $FMT_INVALID_NAME_PATTER $FMT_INVALID_OPTIONS
+  $COMPARE_DIRS_OPTIONS $COMPARE_FILES_OPTIONS $FMT_FILTER_ISNT_CODEREF $FMT_INVALID_NAME_PATTER $FMT_INVALID_OPTIONS
 );
 
-const my $DEFAULT => $COMPARE_DIRS_OPTIONS;
 my $expected;
 
 plan( 2 );
 
 subtest failure => sub {
   plan( 3 );
+
+  const my $DEFAULT => $COMPARE_DIRS_OPTIONS;
 
   $expected = sprintf( $FMT_INVALID_OPTIONS, 'X' );
   is  ( $METHOD_REF->( { X            => 0   }, $DEFAULT ),    $expected, 'invalid option' );
@@ -33,6 +34,8 @@ subtest success => sub {
   subtest 'both filter and name pattern supplied' => sub {
     plan( 2 );
 
+    const my $DEFAULT => $COMPARE_DIRS_OPTIONS;
+
     my $filter = sub {};
     my ( $diag, %args ) = $METHOD_REF->( { FILTER => $filter, NAME_PATTERN => '..' }, $DEFAULT );
     is( $diag,  undef,                                                      'no errors' );
@@ -41,6 +44,8 @@ subtest success => sub {
 
   subtest 'both filter and name pattern omitted' => sub {
     plan( 2 );
+
+    const my $DEFAULT => $COMPARE_FILES_OPTIONS;
 
     my ( $diag, %args ) = $METHOD_REF->( {}, $DEFAULT );
     is( $diag,  undef,    'no errors' );

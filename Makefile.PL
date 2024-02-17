@@ -23,9 +23,10 @@ WriteMakefile(
 		'Text::Diff'     => 0,
 	},
 	TEST_REQUIRES    => {
-		'FindBin'        => 0,
-		'Test::Expander' => 0,
-		'Test::Simple'   => 0,
+		'File::Copy::Recursive' => 0,
+		'FindBin'        				=> 0,
+		'Test::Expander' 				=> 0,
+		'Test::Simple'   				=> 0,
 	},
 	VERSION_FROM     => 'lib/Test/Files.pm',
 	test             => {

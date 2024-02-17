@@ -67,7 +67,7 @@ sub dir_contains_ok {
   return _show_result( !@$diag, $name, @$diag );
 }
 
-sub dir_contains_only_ok {
+sub dir_only_contains_ok {
   my ( $dir, $file_list, @rest ) = @_;
 
   my ( $diag, $options, $name ) = _validate_trailing_args( \@rest, $COMPARE_DIRS_OPTIONS );
@@ -86,9 +86,9 @@ sub file_filter_ok {
 }
 
 sub file_ok {
-  my ( $file, $expected_string, $name ) = @_;
+  my ( $file, $expected_string, @rest ) = @_;
 
-  return _compare_ok( $file, \$expected_string, $COMPARE_FILES_OPTIONS, $name );
+  return _compare_ok( $file, \$expected_string, @rest );
 }
 
 sub find_ok {
@@ -96,7 +96,7 @@ sub find_ok {
   return _show_failure( $name, $diag ) if $diag;
 
   $diag = [];
-  my $match = sub { push( @$diag, $_ ) unless $_->is_file && $sub->( "$_" ) };
+  my $match = sub { push( @$diag, $_ ) if $_->is_file && !$sub->( "$_" ) };
   path( $dir )->visit( $match, { recurse => $options->{ RECURSIVE } } );
 
   return _show_result( !@$diag, $name, sprintf( $FMT_SUB_FAILED, join( "', ", sort @$diag ) ) );
@@ -195,6 +195,7 @@ sub _dir_contains_ok {
   my ( $existence_only, $symmetric ) = @$options{ qw( EXISTENCE_ONLY SYMMETRIC ) };
   my $detected  = [];
   my %file_list = map { $_ => 1 } @$file_list;
+  $diag         = [];
   my $matches   = sub {
     my ( $file ) = @_;
 
@@ -215,7 +216,7 @@ sub _dir_contains_ok {
     return;
   };
   $dir->visit( $matches, { recurse => $options->{ RECURSIVE } } );
-  push( @$diag, sprintf( $FMT_FAILED_TO_SEE, $dir->child( $_ ) ) ) foreach keys( %file_list );
+  push( @$diag, sprintf( $FMT_FAILED_TO_SEE, $dir->child( $_ ) ) ) foreach grep { /$name_pattern/ } keys( %file_list );
 
   return ( [ sort @$diag ], [ sort @$detected ] );
 }
@@ -319,13 +320,15 @@ sub _validate_options {
     $options->{ FILTER } = $default->{ FILTER };
   }
 
-  if ( defined( $options->{ NAME_PATTERN } ) ) {
-    eval { qr/$options->{ NAME_PATTERN }/ };
-    my $error = $@;
-    return sprintf( $FMT_INVALID_NAME_PATTER, $options->{ NAME_PATTERN }, _get_caller_sub(), $error ) if $error;
-  }
-  else {
-    $options->{ NAME_PATTERN } = $default->{ NAME_PATTERN };
+  if ( exists( $default->{ NAME_PATTERN } ) ) {
+    if ( defined( $options->{ NAME_PATTERN } ) ) {
+      eval { qr/$options->{ NAME_PATTERN }/ };
+      my $error = $@;
+      return sprintf( $FMT_INVALID_NAME_PATTER, $options->{ NAME_PATTERN }, _get_caller_sub(), $error ) if $error;
+    }
+    else {
+      $options->{ NAME_PATTERN } = $default->{ NAME_PATTERN };
+    }
   }
 
   return ( undef, %$default, %$options );

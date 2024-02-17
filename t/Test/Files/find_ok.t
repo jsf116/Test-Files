@@ -13,8 +13,7 @@ my $mockThis = mock $CLASS => (
   override => [
     _show_failure  => sub { pass( 'Failure reported' ); undef },
     _show_result   => sub {
-      my $expected =
-        $FMT_SUB_FAILED =~ s/%s/join("', ", path( $TEMP_DIR )->child( 'BAD' ), path( $TEMP_DIR )->child( 'SUBDIR' ))/er;
+      my $expected = $FMT_SUB_FAILED =~ s/%s/path( $TEMP_DIR )->child( 'BAD' )/er;
       is( $_[ 2 ], $expected, 'Negative results reported' );
       return;
     },

@@ -3,6 +3,23 @@
 **Test::Files** - A [Test::Builder](https://metacpan.org/pod/Test::Builder)
 based module to ease testing with files and dirs.
 
+In general, the following can be tested:
+
+- If the contents of the file being tested match the expected pattern.
+
+- If the file being tested is identical to the expected file in regard to contents, or size, or existence.
+
+  If necessary, some parts of the contents can be excluded from the comparison.
+
+- If the directory being tested contains all expected files.
+
+- If the files in the directory being tested are identical to the files in the reference directory
+in regard to contents, or size, or existence.
+
+  If necessary, some files as well as some parts of contents can be excluded from the comparison.
+
+- If all files in the directory being tested fulfill certain requirements.
+
 # SYNOPSIS
 ```perl
     use Path::Tiny qw( path );
@@ -11,7 +28,7 @@ based module to ease testing with files and dirs.
     my $got_file       = path( 'path' )->child( qw( got file ) );
     my $reference_file = path( 'path' )->child( qw( reference file ) );
     my $got_dir        = path( 'path' )->child( qw( got dir ) );
-    my $reference_dir  = path( 'path' )->child( qw( reference dir with hopefully stuff ) );
+    my $reference_dir  = path( 'path' )->child( qw( reference dir with expected stuff ) );
     my @file_list      = qw( expected file );
     my ( $content_check, $expected, $filter, $options );
 
@@ -46,7 +63,7 @@ based module to ease testing with files and dirs.
     compare_ok( $got_file, $reference_file, $options, 'both files have identical size' );
 
     # Verifies if the directory has all expected files (not recursively!):
-    $expected = [ qw( files got_dir must contain ) ]
+    $expected = [ qw( files got_dir must contain ) ];
     dir_contains_ok( $got_dir, $expected, 'directory has all files in list' );
 
     # Two identical variants doing the same verification as before,
@@ -147,17 +164,13 @@ The diff output style can be changed using the option **STYLE** (see below).
 The filter function receives each line of each file.
 It may perform any necessary transformations (like excising dates),
 then it must return the line in (possibly) transformed state.
-For example, the first filter of [Phil Crow, the creator of this module](https://metacpan.org/author/PHILCROW) was
+For example, the first filter of [Phil Crow](https://metacpan.org/author/PHILCROW), the creator of this module was
 ```perl
     sub chop_dates {
       my $line = shift;
       $line =~ s/\d{4}(.\d\d){5}//g;
       return $line;
     }
-```
-that could be shortened and slightly optimized as
-```perl
-    sub { shift =~ s/ \d{4} (?: \. \d\d ){5} //grx }
 ```
 This removes all strings like 2003.10.14.14.17.37.
 Everything else is unchanged and failing tests started passing when they should.

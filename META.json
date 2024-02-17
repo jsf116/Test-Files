@@ -45,6 +45,7 @@
       },
       "test" : {
          "requires" : {
+            "File::Copy::Recursive" : "0",
             "FindBin" : "0",
             "Test::Expander" : "0",
             "Test::Simple" : "0"
