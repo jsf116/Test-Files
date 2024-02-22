@@ -275,6 +275,7 @@ Supported options:
 
 Code reference providing filtering of file contents before comparison.
 The only expected parameter is the current line from the file contents, the return value replaces this line.
+In addition, the special variable B<$.> representing the number of the current line in the file can be used.
 If the return value is undefined, empty string is returned instead.
 Line breaks are neither removed nor added after the execution.
 
@@ -333,6 +334,7 @@ Defaults to B<false>.
 Code reference providing filtering of file contents before comparison and
 being applied to both B<$got_file> and B<$reference_file>.
 The only expected parameter is the current line from the file contents, the return value replaces this line.
+In addition, the special variable B<$.> representing the number of the current line in the file can be used.
 If the return value is undefined, empty string is returned instead.
 Line breaks are neither removed nor added after the execution.
 
@@ -460,6 +462,7 @@ Defaults to B<false>.
 Code reference providing filtering of file contents before comparison and
 applied to files from both B<$got_dir> and B<$reference_dir>.
 The only expected parameter is the current line from the file contents, the return value replaces this line.
+In addition, the special variable B<$.> representing the number of the current line in the file can be used.
 If the return value is undefined, empty string is returned instead.
 Line breaks are neither removed nor added after the execution.
 

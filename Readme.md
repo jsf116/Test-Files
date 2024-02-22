@@ -251,6 +251,7 @@ Supported options:
 
     Code reference providing filtering of file contents before comparison.
     The only expected parameter is the current line from the file contents, the return value replaces this line.
+    In addition, the special variable **$.** representing the number of the current line in the file can be used.
     If the return value is undefined, empty string is returned instead.
     Line breaks are neither removed nor added after the execution.
 
@@ -303,6 +304,7 @@ Supported options:
     Code reference providing filtering of file contents before comparison and
     being applied to both **$got\_file** and **$reference\_file**.
     The only expected parameter is the current line from the file contents, the return value replaces this line.
+    In addition, the special variable **$.** representing the number of the current line in the file can be used.
     If the return value is undefined, empty string is returned instead.
     Line breaks are neither removed nor added after the execution.
 
@@ -402,7 +404,7 @@ There are two forms of calls:
 ```
 Compares (not following symlinks!) all files in the directories **$got\_dir** and **$reference\_dir** reporting differences.
 
-In the generic form, if the 3rd parameter **\\%options** is passed and contains the key **FILTER**,
+In the generic form, if the parameter **\\%options** is passed and contains the key **FILTER**,
 **compare\_dirs\_ok** provides the same functionality as **compare\_dirs\_filter\_ok**.
 
 Supported options:
@@ -418,6 +420,7 @@ Supported options:
     Code reference providing filtering of file contents before comparison and
     applied to files from both **$got\_dir** and **$reference\_dir**.
     The only expected parameter is the current line from the file contents, the return value replaces this line.
+    In addition, the special variable **$.** representing the number of the current line in the file can be used.
     If the return value is undefined, empty string is returned instead.
     Line breaks are neither removed nor added after the execution.
 
@@ -477,7 +480,8 @@ find_ok( $got_dir, \&content_check_func, \%options, $test_name )
 Verifies if the condition **&content\_check\_func** is true for all files in directory **$got\_dir**.
 The code reference **&content\_check\_func** returning boolean is called for any type of file except of directory
 i.e. for symlinks, devices, etc and the only parameter is the full-qualified file name.
-If you want to consider plain files only, you must apply the test operator **-f** to the parameter like shown in ["SYNOPSIS"](#synopsis).
+If you want to consider plain files only, you must apply the test operator **-f** to the parameter
+like shown in ["SYNOPSIS"](#synopsis).
 
 Supported options:
 
