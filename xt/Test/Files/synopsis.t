@@ -19,7 +19,7 @@ const my $PATH => path( $TEMP_DIR );
 my $got_file       = $PATH->child( qw( got file ) );
 my $reference_file = $PATH->child( qw( reference file ) );
 my $got_dir        = $PATH->child( qw( got dir ) );
-my $reference_dir  = $PATH->child( qw( reference dir with expected stuff ) );
+my $reference_dir  = $PATH->child( qw( reference dir with some stuff ) );
 my @file_list      = qw( expected file );
 my ( $content_check, $expected, $filter, $options );
 
@@ -34,7 +34,7 @@ file_ok( $got_file, $expected, 'got file has expected contents' );
 # Two identical variants comparing file contests to a string ignoring differences in time stamps:
 $expected = "filtered contents\nof file\ncreated at 00:00:00";
 $got_file->spew( $expected =~ s/00:00:00/12:34:56/r );
-$filter   = sub { shift =~ s/ \b (?: [01] \d | 2 [0-3] ) : (?: [0-5] \d ) : (?: [0-5] \d ) \b /00:00:00/grx };
+$filter   = sub { shift =~ s{ \b (?: [01] \d | 2 [0-3] ) : (?: [0-5] \d ) : (?: [0-5] \d ) \b }{00:00:00}grx };
 $options  = { FILTER => $filter };
 file_ok       ( $got_file, $expected, $options, "'$got_file' has contents expected after filtering" );
 file_filter_ok( $got_file, $expected, $filter,  "'$got_file' has contents expected after filtering" );
@@ -46,7 +46,7 @@ compare_ok( $got_file, $reference_file, 'files are the same' );
 
 # Two identical variants comparing contents of two files ignoring differences in time stamps:
 $got_file->spew( $expected );
-$filter  = sub { shift =~ s/ \b (?: [01] \d | 2 [0-3] ) : (?: [0-5] \d ) : (?: [0-5] \d ) \b /00:00:00/grx };
+$filter   = sub { shift =~ s{ \b (?: [01] \d | 2 [0-3] ) : (?: [0-5] \d ) : (?: [0-5] \d ) \b }{00:00:00}grx };
 $options = { FILTER => $filter };
 compare_ok       ( $got_file, $reference_file, $options, 'files are almost the same' );
 compare_filter_ok( $got_file, $reference_file, $filter,  'files are almost the same' );
@@ -142,7 +142,7 @@ dircopy( $reference_dir, $got_dir );
 $expected = "filtered contents\nof file\ncreated at 00:00:00";
 $got_dir      ->child( 'A.txt' )->spew( $expected =~ s/00:00:00/12:34:56/r );
 $reference_dir->child( 'A.txt' )->spew( $expected =~ s/00:00:00/21:43:05/r );
-$filter  = sub { shift =~ s/ \b (?: [01] \d | 2 [0-3] ) : (?: [0-5] \d ) : (?: [0-5] \d ) \b /00:00:00/grx };
+$filter   = sub { shift =~ s{ \b (?: [01] \d | 2 [0-3] ) : (?: [0-5] \d ) : (?: [0-5] \d ) \b }{00:00:00}grx };
 $options = { FILTER => $filter };
 compare_dirs_ok(
   $got_dir, $reference_dir, $options,

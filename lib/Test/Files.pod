@@ -34,13 +34,15 @@ If all files in the directory being tested fulfill certain requirements.
 
 =head1 SYNOPSIS
 
+All examples listed below can be found and executed using B<xt/synposis.t>.
+
   use Path::Tiny qw( path );
   use Test::Files;
 
   my $got_file       = path( 'path' )->child( qw( got file ) );
   my $reference_file = path( 'path' )->child( qw( reference file ) );
   my $got_dir        = path( 'path' )->child( qw( got dir ) );
-  my $reference_dir  = path( 'path' )->child( qw( reference dir with expected stuff ) );
+  my $reference_dir  = path( 'path' )->child( qw( reference dir with some stuff ) );
   my @file_list      = qw( expected file );
   my ( $content_check, $expected, $filter, $options );
 
@@ -50,21 +52,39 @@ If all files in the directory being tested fulfill certain requirements.
   $expected = "contents\nof file";
   file_ok( $got_file, $expected, 'got file has expected contents' );
 
-  # Two identical variants comparing file contests to a string ignoring differences in time stamps:
+  # Two identical variants comparing file contents
+  # to a string ignoring differences in time stamps:
   $expected = "filtered contents\nof file\ncreated at 00:00:00";
-  $filter   = sub { shift =~ s/ \b (?: [01] \d | 2 [0-3] ) : (?: [0-5] \d ) : (?: [0-5] \d ) \b /00:00:00/grx };
+  $filter   = sub {
+    shift =~ s{ \b (?: [01] \d | 2 [0-3] ) : (?: [0-5] \d ) : (?: [0-5] \d ) \b }
+              {00:00:00}grx
+  };
   $options  = { FILTER => $filter };
-  file_ok       ( $got_file, $expected, $options, "'$got_file' has contents expected after filtering" );
-  file_filter_ok( $got_file, $expected, $filter,  "'$got_file' has contents expected after filtering" );
+  file_ok       (
+    $got_file, $expected, $options,
+    "'$got_file' has contents expected after filtering"
+  );
+  file_filter_ok(
+    $got_file, $expected, $filter,
+    "'$got_file' has contents expected after filtering"
+  );
 
   # Simply compares two file contents:
   compare_ok( $got_file, $reference_file, 'files are the same' );
 
-  # Two identical variants comparing contents of two files ignoring differences in time stamps:
-  $filter  = sub { shift =~ s/ \b (?: [01] \d | 2 [0-3] ) : (?: [0-5] \d ) : (?: [0-5] \d ) \b /00:00:00/grx };
+  # Two identical variants comparing contents of two files
+  # ignoring differences in time stamps:
+  $filter  = sub {
+    shift =~ s{ \b (?: [01] \d | 2 [0-3] ) : (?: [0-5] \d ) : (?: [0-5] \d ) \b }
+              {00:00:00}grx
+  };
   $options = { FILTER => $filter };
-  compare_ok       ( $got_file, $reference_file, $options, 'files are almost the same' );
-  compare_filter_ok( $got_file, $reference_file, $filter,  'files are almost the same' );
+  compare_ok       (
+    $got_file, $reference_file, $options, 'files are almost the same'
+  );
+  compare_filter_ok(
+    $got_file, $reference_file, $filter,  'files are almost the same'
+  );
 
   # Verifies if both got file and reference file exist:
   $options = { EXISTENCE_ONLY => 1 };
@@ -72,86 +92,122 @@ If all files in the directory being tested fulfill certain requirements.
 
   # Verifies if got file and reference file have identical size:
   $options = { SIZE_ONLY => 1 };
-  compare_ok( $got_file, $reference_file, $options, 'both files have identical size' );
+  compare_ok(
+    $got_file, $reference_file, $options, 'both files have identical size'
+  );
 
   # Verifies if the directory has all expected files (not recursively!):
   $expected = [ qw( files got_dir must contain ) ];
   dir_contains_ok( $got_dir, $expected, 'directory has all files in list' );
 
   # Two identical variants doing the same verification as before,
-  # but additionally verifying if the directory has nothing but the expected files (not recursively!):
+  # but additionally verifying if the directory has nothing
+  # but the expected files (not recursively!):
   $options = { SYMMETRIC => 1 };
-  dir_contains_ok     ( $got_dir, $expected, $options, 'directory has exactly the files in the list' );
-  dir_only_contains_ok( $got_dir, $expected,           'directory has exactly the files in the list' );
+  dir_contains_ok     (
+    $got_dir, $expected, $options, 'directory has exactly the files in the list'
+  );
+  dir_only_contains_ok(
+    $got_dir, $expected,           'directory has exactly the files in the list'
+  );
 
   # The same as before, but recursive:
   $options = { RECURSIVE => 1, SYMMETRIC => 1 };
-  dir_contains_ok( $got_dir, $expected, $options, 'directory and its subdirectories have exactly the files in the list' );
+  dir_contains_ok(
+    $got_dir, $expected, $options,
+    'directory and its subdirectories have exactly the files in the list'
+  );
 
-  # The same as before, but ignoring files, which names do not match the required pattern (file "must" will be skipped):
+  # The same as before, but ignoring files,
+  # which names do not match the required pattern (file "must" will be skipped):
   $options = { NAME_PATTERN => '^[cfg]', RECURSIVE => 1, SYMMETRIC => 1 };
   dir_contains_ok(
     $got_dir, $expected, $options,
-    "directory and its subdirectories have exactly the files in the list except of file 'must'"
+    'directory and its subdirectories ' .
+    "have exactly the files in the list except of file 'must'"
   );
 
   # Compares two directories by comparing file contents (not recursively!):
   compare_dirs_ok(
     $got_dir, $reference_dir,
-    "all files from '$got_dir' are the same in '$reference_dir' (same names, same contents), subdirs are skipped"
+    "all files from '$got_dir' are the same in '$reference_dir' " .
+    '(same names, same contents), subdirs are skipped'
   );
 
   # The same as before, but subdirectories are considered, too:
   $options = { RECURSIVE => 1 };
   compare_dirs_ok(
-    $got_dir, $reference_dir, $options, "all files from '$got_dir' and its subdirs are the same in '$reference_dir'"
+    $got_dir, $reference_dir, $options,
+    "all files from '$got_dir' and its subdirs are the same in '$reference_dir'"
   );
 
   # The same as before, but only file sizes are compared:
   $options = { RECURSIVE => 1, SIZE_ONLY => 1 };
   compare_dirs_ok(
-    $got_dir, $reference_dir, $options, "all files from '$got_dir' and its subdirs have same sizes in '$reference_dir'"
+    $got_dir, $reference_dir, $options,
+    "all files from '$got_dir' and its subdirs have same sizes in '$reference_dir'"
   );
 
   # The same as before, but only file existence is verified:
   $options = { EXISTENCE_ONLY => 1, RECURSIVE => 1 };
   compare_dirs_ok(
-    $got_dir, $reference_dir, $options, "all files from '$got_dir' and its subdirs exist in '$reference_dir'"
+    $got_dir, $reference_dir, $options,
+    "all files from '$got_dir' and its subdirs exist in '$reference_dir'"
   );
 
   # The same as before, but only files with base names starting with 'A' are considered:
   $options = { EXISTENCE_ONLY => 1, NAME_PATTERN => '^A', RECURSIVE => 1 };
   compare_dirs_ok(
     $got_dir, $reference_dir, $options,
-    "all files from '$got_dir' and its subdirs with base names starting with 'A' exist in '$reference_dir'"
+    "all files from '$got_dir' and its subdirs " .
+    "with base names starting with 'A' exist in '$reference_dir'"
   );
 
   # The same as before, but the symmetric verification is requested:
-  $options = { EXISTENCE_ONLY => 1, NAME_PATTERN => '^A', RECURSIVE => 1, SYMMETRIC => 1 };
+  $options = {
+    EXISTENCE_ONLY => 1,
+    NAME_PATTERN   => '^A',
+    RECURSIVE      => 1,
+    SYMMETRIC      => 1,
+  };
   compare_dirs_ok(
     $got_dir, $reference_dir, $options,
-    "all files from '$got_dir' and its subdirs with base names starting with 'A' exist in '$reference_dir' and vice versa"
+    "all files from '$got_dir' and its subdirs with base names " .
+    "starting with 'A' exist in '$reference_dir' and vice versa"
   );
 
-  # Two identical version of comparison of two directories by file contents,
-  # whereas these contents are first filtered so that time stamps in form of 'HH:MM:SS' are replaced by '00:00:00'
+  # Two identical variants of comparison of two directories by file contents,
+  # whereas these contents are first filtered
+  # so that time stamps in form of 'HH:MM:SS' are replaced by '00:00:00'
   # like in examples for file_filter_ok and compare_filter_ok:
-  $filter  = sub { shift =~ s/ \b (?: [01] \d | 2 [0-3] ) : (?: [0-5] \d ) : (?: [0-5] \d ) \b /00:00:00/grx };
+  $filter  = sub {
+    shift =~ s{ \b (?: [01] \d | 2 [0-3] ) : (?: [0-5] \d ) : (?: [0-5] \d ) \b }
+              {00:00:00}grx
+  };
   $options = { FILTER => $filter };
   compare_dirs_ok(
     $got_dir, $reference_dir, $options,
-    "all files from '$got_dir' are the same in '$reference_dir', subdirs are skipped, differences of time stamps ignored"
+    "all files from '$got_dir' are the same in '$reference_dir', " .
+    'subdirs are skipped, differences of time stamps ignored'
   );
   compare_dirs_filter_ok(
     $got_dir, $reference_dir, $filter,
-    "all files from '$got_dir' are the same in '$reference_dir', subdirs are skipped, differences of time stamps ignored"
+    "all files from '$got_dir' are the same in '$reference_dir', " .
+    'subdirs are skipped, differences of time stamps ignored'
   );
 
-  # Verifies if all plain files in directory and its subdirectories contain the word 'good'
-  # (take into consideration the -f test below excluding special files from comparison!):
-  $content_check = sub { my ( $file ) = @_; ! -f $file or path( $file )->slurp =~ / \b good \b /x };
+  # Verifies if all plain files in directory and its subdirectories
+  # contain the word 'good' (take into consideration the -f test below
+  # excluding special files from comparison!):
+  $content_check = sub {
+    my ( $file ) = @_;
+    ! -f $file or path( $file )->slurp =~ / \b good \b /x;
+  };
   $options       = { RECURSIVE => 1 };
-  find_ok( $got_dir, $content_check, $options, "all files from '$got_dir' and subdirectories contain the word 'good'" );
+  find_ok(
+    $got_dir, $content_check, $options,
+    "all files from '$got_dir' and subdirectories contain the word 'good'"
+  );
 
 =head1 DESCRIPTION
 
@@ -184,22 +240,34 @@ For example, the first filter of L<Phil Crow|https://metacpan.org/author/PHILCRO
     return $line;
   }
 
-This removes all strings like 2003.10.14.14.17.37.
+This removes all strings like B<2003.10.14.14.17.37>.
 Everything else is unchanged and failing tests started passing when they should.
 If you want to exclude the line from consideration, return empty string or B<undef>.
 
 =head2 FUNCTIONS
 
-=head3 file_ok( $got_file, $expected_string, $test_name )
+=head3 file_ok
 
-=head3 file_ok( $got_file, $expected_string, \%options, $test_name )
+There are two forms of calls:
+
+=over 2
+
+=item The generic form.
+
+B<file_ok( $got_file, $expected_string, \%options, $test_name )>
+
+=item The short form, which is also backward compatible.
+
+B<file_ok( $got_file, $expected_string, $test_name )>
+
+=back
 
 Compares the contents of a file B<$got_file> to a string B<$expected_string>.
 
-In the generic form (i.e. if the 3rd parameter B<\%options> is passed and contains the key B<FILTER>)
+In the generic form, if the parameter B<\%options> is passed and contains the key B<FILTER>,
 B<file_ok> provides the same functionality as B<file_filter_ok>.
 
-=head4 Supported options
+Supported options:
 
 =over 2
 
@@ -207,7 +275,7 @@ B<file_ok> provides the same functionality as B<file_filter_ok>.
 
 Code reference providing filtering of file contents before comparison.
 The only expected parameter is the current line from the file contents, the return value replaces this line.
-If the return value is undefined, empty string is applied instead.
+If the return value is undefined, empty string is returned instead.
 Line breaks are neither removed nor added after the execution.
 
 Defaults to B<undef> i.e. no filtering is provided.
@@ -215,28 +283,42 @@ Defaults to B<undef> i.e. no filtering is provided.
 =item All options supported by L<Text::Diff|https://metacpan.org/pod/Text::Diff>
 except of B<FILENAME_A> and B<FILENAME_B>.
 
-The most useful of them is B<STYLE> defining the style of output for content differences.
+The most useful of them seems to be B<STYLE> defining the style of output for content differences.
 Defaults to B<Unified>.
 
 =back
 
-=head3 file_filter_ok( $got_file, $expected_string, \&filter_func, $test_name )
+=head3 file_filter_ok
+
+There is only one form of call namely B<file_filter_ok( $got_file, $expected_string, \&filter_func, $test_name )>.
 
 Works like B<file_ok> with the option B<FILTER> i.e. compares the contents of a file to a string,
-but filters the file first. The string contents must be filtered before if necessary.
+but filters the file first using B<&filter_func> for that. The string contents must be filtered before if necessary.
 
 This function is deprecated and stays for backward compatibility reasons only.
 
-=head3 compare_ok( $got_file, $reference_file, $test_name )
+=head3 compare_ok
 
-=head3 compare_ok( $got_file, $reference_file, \%options, $test_name )
+There are two forms of calls:
+
+=over 2
+
+=item The generic form.
+
+B<compare_ok( $got_file, $reference_file, \%options, $test_name )>
+
+=item The short form, which is also backward compatible.
+
+B<compare_ok( $got_file, $reference_file, $test_name )>
+
+=back
 
 Compares two files.
 
-In the generic form (i.e. if the 3rd parameter B<\%options> is passed and contains the key B<FILTER>)
+In the generic form, if the parameter B<\%options> is passed and contains the key B<FILTER>,
 B<compare_ok> provides the same functionality as B<compare_filter_ok>.
 
-=head4 Supported options
+Supported options:
 
 =over 2
 
@@ -249,10 +331,12 @@ Defaults to B<false>.
 =item B<FILTER>
 
 Code reference providing filtering of file contents before comparison and
-applied to both B<$got_file> and B<$reference_file>.
+being applied to both B<$got_file> and B<$reference_file>.
 The only expected parameter is the current line from the file contents, the return value replaces this line.
-If the return value is undefined, empty string is applied instead.
+If the return value is undefined, empty string is returned instead.
 Line breaks are neither removed nor added after the execution.
+
+Ignored if either B<EXISTENCE_ONLY> or B<SIZE_ONLY> is set to B<true>.
 
 Defaults to B<undef> i.e. no filtering is provided.
 
@@ -266,41 +350,49 @@ Defaults to B<false>.
 =item All options supported by L<Text::Diff|https://metacpan.org/pod/Text::Diff>
 except of B<FILENAME_A> and B<FILENAME_B>.
 
-The most useful of them is B<STYLE> defining the style of output for content differences.
+The most useful of them seems to be B<STYLE> defining the style of output for content differences.
 Defaults to B<Unified>.
 
 =back
 
-=head3 compare_filter_ok( $got_file, $reference_file, \&filter_func, $test_name )
+=head3 compare_filter_ok
+
+There is only one form of call namely B<compare_filter_ok( $got_file, $reference_file, \&filter_func, $test_name )>.
 
 Works like B<compare_ok> with option B<FILTER> i.e. compares the contents of two files,
-but sends each line through a filter so things that shouldn't count against success can be stripped.
+but sends each line through the filter B<&filter_func> so things that shouldn't count against success can be stripped.
 
 This function is deprecated and stays for backward compatibility reasons only.
 
-=head3 dir_contains_ok( $got_dir, \@file_list, $test_name )
+=head3 dir_contains_ok
 
-=head3 dir_contains_ok( $got_dir, \@file_list, \%options, $test_name )
+There are two forms of calls:
 
-Verifies a directory for the presence of a list files. Symlinks are not followed.
+=over 2
+
+=item The generic form.
+
+B<dir_contains_ok( $got_dir, \@file_list, \%options, $test_name )>
+
+=item The short form, which is also backward compatible.
+
+B<dir_contains_ok( $got_dir, \@file_list, $test_name )>
+
+=back
+
+Verifies the directory B<$got_dir> for the presence of a list files in B<@file_list>. Symlinks are not followed.
 Subdirectories are not involved in the verification, but files located therein are considered
 if recursive appraoch is required (see the option B<RECURSIVE> below).
 Special files like named pipes are involved in the verification only if the sole file existence is required
 (see the option B<EXISTENCE_ONLY> below), otherwise they are skipped and reported as error.
 
-In the generic form i.e. if the 3rd parameter B<\%options> is passed and
+In the generic form, if the parameter B<\%options> is passed and
 contains the key B<SYMMETRIC> set to B<true>, B<dirs_contains_ok> provides the same functionality
 as B<dir_only_contains_ok>.
 
-=head4 Supported options
+Supported options:
 
 =over 2
-
-=item B<EXISTENCE_ONLY>
-
-Boolean. If set to B<true>, only existence of files in B<$got_dir> is tested.
-
-Defaults to B<false>.
 
 =item B<NAME_PATTERN>
 
@@ -322,7 +414,9 @@ Defaults to B<false>.
 
 =back
 
-=head3 dir_only_contains_ok( $got_dir, \@file_list, $test_name )
+=head3 dir_only_contains_ok
+
+There is only one form of call namely B<dir_only_contains_ok( $got_dir, \@file_list, $test_name )>.
 
 Works like B<dir_contains_ok> with option B<SYMMETRIC> set to B<true> i.e.
 checks directory without following symlinks to ensure
@@ -330,16 +424,28 @@ that the listed files are present and that they are the only ones present.
 
 This function is deprecated and stays for backward compatibility reasons only.
 
-=head3 compare_dirs_ok( $got_dir, $reference_dir, $test_name )
+=head3 compare_dirs_ok
 
-=head3 compare_dirs_ok( $got_dir, $reference_dir, \%options, $test_name )
+There are two forms of calls:
 
-Compares (not following symlinks!) all files in two directories reporting differences.
+=over 2
 
-In the generic form (i.e. if the 3rd parameter B<\%options> is passed and contains the key B<FILTER>)
+=item The generic form.
+
+B<compare_dirs_ok( $got_dir, $reference_dir, \%options, $test_name )>
+
+=item The short form, which is also backward compatible.
+
+B<compare_dirs_ok( $got_dir, $reference_dir, $test_name )>
+
+=back
+
+Compares (not following symlinks!) all files in the directories B<$got_dir> and B<$reference_dir> reporting differences.
+
+In the generic form, if the parameter B<\%options> is passed and contains the key B<FILTER>,
 B<compare_dirs_ok> provides the same functionality as B<compare_dirs_filter_ok>.
 
-=head4 Supported options
+Supported options:
 
 =over 2
 
@@ -354,8 +460,10 @@ Defaults to B<false>.
 Code reference providing filtering of file contents before comparison and
 applied to files from both B<$got_dir> and B<$reference_dir>.
 The only expected parameter is the current line from the file contents, the return value replaces this line.
-If the return value is undefined, empty string is applied instead.
+If the return value is undefined, empty string is returned instead.
 Line breaks are neither removed nor added after the execution.
+
+Ignored if either B<EXISTENCE_ONLY> or B<SIZE_ONLY> is set to B<true>.
 
 Defaults to B<undef> i.e. no filtering is provided.
 
@@ -388,26 +496,31 @@ Defaults to B<false>.
 =item All options supported by L<Text::Diff|https://metacpan.org/pod/Text::Diff>
 except of B<FILENAME_A> and B<FILENAME_B>.
 
-The most useful of them is B<STYLE> defining the style of output for content differences.
+The most useful of them seems to be B<STYLE> defining the style of output for content differences.
 Defaults to B<Unified>.
 
 =back
 
-=head3 compare_dirs_filter_ok( $got_dir, $reference_dir, \&filter_func, $test_name )
+=head3 compare_dirs_filter_ok
 
-Works like B<compare_dirs_ok> with option B<FILTER> i.e. calls a filter function on each line of every file
-allowing you to exclude or alter some text to avoid spurious failures (like timestamp disagreements).
+There is only one form of call namely B<compare_dirs_filter_ok( $got_dir, $reference_dir, \&filter_func, $test_name )>.
+
+Works like B<compare_dirs_ok> with option B<FILTER> i.e. calls the filter function B<&filter_func> on each line
+of every file allowing you to exclude or alter some text to avoid spurious failures (like timestamp disagreements).
 
 This function is deprecated and stays for backward compatibility reasons only.
 
-=head3 find_ok( $got_dir, \&content_check_func, \%options, $test_name )
+=head3 find_ok
 
-Verifies if the condition passed as code reference B<\&content_check_func> is true for all files in directory B<$got_dir>.
-The code reference returning boolean is called for any type of file except of directory
+The signature is B<find_ok( $got_dir, \&content_check_func, \%options, $test_name )>.
+
+Verifies if the condition B<&content_check_func> is true for all files in directory B<$got_dir>.
+The code reference B<&content_check_func> returning boolean is called for any type of file except of directory
 i.e. for symlinks, devices, etc and the only parameter is the full-qualified file name.
-If you want to consider plain files only, you must apply the test operator B<-f> to the parameter.
+If you want to consider plain files only, you must apply the test operator B<-f> to the parameter
+like shown in L</SYNOPSIS>.
 
-=head4 Supported options
+Supported options:
 
 =over 2
 
@@ -432,6 +545,11 @@ that's why L<Test::More|https://metacpan.org/pod/Test::More> is not listed in L<
 
 Please report any bugs or feature requests through the web interface at
 L<https://github.com/jsf116/Test-Files/issues>.
+
+=head1 CAVEATS
+
+Although this module can cope with binary files, too, confirming their equality,
+but in case of differences a proper representation of comparison results is not guaranteed.
 
 =head1 AUTHOR
 

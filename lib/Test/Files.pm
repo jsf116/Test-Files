@@ -1,6 +1,6 @@
 package Test::Files;
 
-our $VERSION = '0.16';                                      ## no critic (RequireUseStrict, RequireUseWarnings)
+our $VERSION = '0.19';                                      ## no critic (RequireUseStrict, RequireUseWarnings)
 
 use strict;
 use warnings
@@ -248,11 +248,12 @@ sub _get_file_info {
   return ( undef, 1 )                                                   if $options->{ EXISTENCE_ONLY };
   return ( undef, $is_real_file ? $file_stat->size : length( $$file ) ) if $options->{ SIZE_ONLY };
 
+  local $.    = 0;
   my $filter  = $options->{ FILTER };
   my $content = $is_real_file
     ? eval {
         $filter
-          ? join( '', map { my $filtered = $filter->( $_ ); defined( $filtered ) ? $filtered : () } $file->lines )
+          ? join( '', map { ++$.; my $filtered = $filter->( $_ ); defined( $filtered ) ? $filtered : () } $file->lines )
           : $file->slurp
       }
     : $$file;

@@ -1,5 +1,14 @@
 Revision history for Perl extension Test::Files.
 
+0.19 2024-02-22
+    - Implemented support of the special variable $. if it is needed in the filter function.
+
+0.18 2024-02-21
+    - Improved documentation.
+
+0.17 2024-02-21
+    - Improved documentation.
+
 0.16 2024-02-17
     - Introduced generic approach of both files, file with string, and directories comparison.
     - Implemented support of file comparison by size and by existence.

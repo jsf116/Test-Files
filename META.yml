@@ -18,10 +18,10 @@ no_index:
 provides:
   Test::Files:
     file: lib/Test/Files.pm
-    version: '0.16'
+    version: '0.19'
   Test::Files::Constants:
     file: lib/Test/Files/Constants.pm
-    version: '0.16'
+    version: '0.19'
 requires:
   Const::Fast: '0'
   Exporter: '0'
@@ -34,4 +34,4 @@ requires:
 resources:
   bugtracker: https://github.com/jsf116/Test-Files
   repository: git://github.com/jsf116/Test-Files.git
-version: '0.16'
+version: '0.19'
