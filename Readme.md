@@ -329,7 +329,7 @@ except of **FILENAME\_A** and **FILENAME\_B**.
 
 There is only one form of call namely
 ```perl
-compare_filter_ok( $got_file, $reference_file, \&filter_func, $test_name )
+compare_filter\_ok( $got_file, $reference_file, \&filter_func, $test_name )
 ```
 Works like **compare\_ok** with option **FILTER** i.e. compares the contents of two files,
 but sends each line through the filter **&filter\_func** so things that shouldn't count against success can be stripped.
@@ -348,7 +348,8 @@ There are two forms of calls:
 ```perl
   dir_contains_ok( $got_dir, \@file_list, $test_name )
 ```
-Verifies the directory **$got\_dir** for the presence of a list files in **@file\_list**. Symlinks are not followed.
+Verifies the directory **$got\_dir** for the presence of a list files in **@file\_list**.
+If **$got\_dir** is a symlink, this will be accepted, but symlinks therein are not followed.
 Subdirectories are not involved in the verification, but files located therein are considered
 if recursive appraoch is required (see the option **RECURSIVE** below).
 Special files like named pipes are involved in the verification only if the sole file existence is required
@@ -385,7 +386,7 @@ There is only one form of call namely
 dir_only_contains_ok( $got_dir, \@file_list, $test_name )
 ```
 Works like **dir\_contains\_ok** with option **SYMMETRIC** set to **true** i.e.
-checks directory without following symlinks to ensure
+checks directory without following symlinks therein to ensure
 that the listed files are present and that they are the only ones present.
 
 This function is deprecated and stays for backward compatibility reasons only.
@@ -402,7 +403,8 @@ There are two forms of calls:
 ```perl
   compare_dirs_ok( $got_dir, $reference_dir, $test_name )
 ```
-Compares (not following symlinks!) all files in the directories **$got\_dir** and **$reference\_dir** reporting differences.
+Compares all files in the directories **$got\_dir** and **$reference\_dir** reporting differences.
+If **$got\_dir** or **$reference\_dir** is a symlink, this will be accepted, but symlinks therein are not followed.
 
 In the generic form, if the parameter **\\%options** is passed and contains the key **FILTER**,
 **compare\_dirs\_ok** provides the same functionality as **compare\_dirs\_filter\_ok**.

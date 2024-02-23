@@ -34,6 +34,7 @@
       "runtime" : {
          "requires" : {
             "Const::Fast" : "0",
+            "Cwd" : "0",
             "Exporter" : "0",
             "Fcntl" : "0",
             "PadWalker" : "0",
@@ -55,11 +56,11 @@
    "provides" : {
       "Test::Files" : {
          "file" : "lib/Test/Files.pm",
-         "version" : "0.19"
+         "version" : "0.20"
       },
       "Test::Files::Constants" : {
          "file" : "lib/Test/Files/Constants.pm",
-         "version" : "0.19"
+         "version" : "0.20"
       }
    },
    "release_status" : "stable",
@@ -73,5 +74,5 @@
          "web" : "https://github.com/jsf116/Test-Files"
       }
    },
-   "version" : "0.19"
+   "version" : "0.20"
 }

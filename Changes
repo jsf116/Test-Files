@@ -1,5 +1,8 @@
 Revision history for Perl extension Test::Files.
 
+0.20 2024-02-22
+    - Symlink to directory passed as argument to any function dealing with directories is now accepted.
+
 0.19 2024-02-22
     - Implemented support of the special variable $. if it is needed in the filter function.
 

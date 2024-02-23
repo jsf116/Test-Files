@@ -1,12 +1,13 @@
 package Test::Files;
 
-our $VERSION = '0.19';                                      ## no critic (RequireUseStrict, RequireUseWarnings)
+our $VERSION = '0.20';                                      ## no critic (RequireUseStrict, RequireUseWarnings)
 
 use strict;
 use warnings
   FATAL    => qw( all ),
   NONFATAL => qw( deprecated exec internal malloc newline portable recursion );
 
+use Cwd        qw( abs_path );
 use Exporter   qw( import );
 use Fcntl      qw( :mode );
 use Path::Tiny qw( path );
@@ -215,7 +216,8 @@ sub _dir_contains_ok {
 
     return;
   };
-  $dir->visit( $matches, { recurse => $options->{ RECURSIVE } } );
+  my $visitingDir = path( abs_path( $dir ) );
+  $visitingDir->visit( $matches, { recurse => $options->{ RECURSIVE } } );
   push( @$diag, sprintf( $FMT_FAILED_TO_SEE, $dir->child( $_ ) ) ) foreach grep { /$name_pattern/ } keys( %file_list );
 
   return ( [ sort @$diag ], [ sort @$detected ] );

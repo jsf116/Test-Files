@@ -382,7 +382,8 @@ B<dir_contains_ok( $got_dir, \@file_list, $test_name )>
 
 =back
 
-Verifies the directory B<$got_dir> for the presence of a list files in B<@file_list>. Symlinks are not followed.
+Verifies the directory B<$got_dir> for the presence of a list files in B<@file_list>.
+If B<$got_dir> is a symlink, this will be accepted, but symlinks therein are not followed.
 Subdirectories are not involved in the verification, but files located therein are considered
 if recursive appraoch is required (see the option B<RECURSIVE> below).
 Special files like named pipes are involved in the verification only if the sole file existence is required
@@ -421,7 +422,7 @@ Defaults to B<false>.
 There is only one form of call namely B<dir_only_contains_ok( $got_dir, \@file_list, $test_name )>.
 
 Works like B<dir_contains_ok> with option B<SYMMETRIC> set to B<true> i.e.
-checks directory without following symlinks to ensure
+checks directory without following symlinks therein to ensure
 that the listed files are present and that they are the only ones present.
 
 This function is deprecated and stays for backward compatibility reasons only.
@@ -442,7 +443,8 @@ B<compare_dirs_ok( $got_dir, $reference_dir, $test_name )>
 
 =back
 
-Compares (not following symlinks!) all files in the directories B<$got_dir> and B<$reference_dir> reporting differences.
+Compares all files in the directories B<$got_dir> and B<$reference_dir> reporting differences.
+If B<$got_dir> or B<$reference_dir> is a symlink, this will be accepted, but symlinks therein are not followed.
 
 In the generic form, if the parameter B<\%options> is passed and contains the key B<FILTER>,
 B<compare_dirs_ok> provides the same functionality as B<compare_dirs_filter_ok>.
