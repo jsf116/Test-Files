@@ -1,5 +1,8 @@
 Revision history for Perl extension Test::Files.
 
+0.21 2024-02-24
+    - Test on special devices skipped if they are not supported by the current OS.
+
 0.20 2024-02-22
     - Symlink to directory passed as argument to any function dealing with directories is now accepted.
 

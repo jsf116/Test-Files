@@ -1,6 +1,6 @@
 package Test::Files;
 
-our $VERSION = '0.20';                                      ## no critic (RequireUseStrict, RequireUseWarnings)
+our $VERSION = '0.21';                                      ## no critic (RequireUseStrict, RequireUseWarnings)
 
 use strict;
 use warnings
@@ -216,8 +216,7 @@ sub _dir_contains_ok {
 
     return;
   };
-  my $visitingDir = path( abs_path( $dir ) );
-  $visitingDir->visit( $matches, { recurse => $options->{ RECURSIVE } } );
+  path( abs_path( $dir ) )->visit( $matches, { recurse => $options->{ RECURSIVE } } );
   push( @$diag, sprintf( $FMT_FAILED_TO_SEE, $dir->child( $_ ) ) ) foreach grep { /$name_pattern/ } keys( %file_list );
 
   return ( [ sort @$diag ], [ sort @$detected ] );
