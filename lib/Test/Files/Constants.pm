@@ -1,6 +1,6 @@
 package Test::Files::Constants;
 
-our $VERSION = '0.21';                                      ## no critic (RequireUseStrict, RequireUseWarnings)
+our $VERSION = '0.22';                                      ## no critic (RequireUseStrict, RequireUseWarnings)
 
 use strict;
 use warnings
@@ -11,7 +11,7 @@ use Const::Fast qw( const );
 use Exporter    qw( import );
 use PadWalker   qw( peek_our );
 
-const our $COMPARE_DIRS_OPTIONS    => {
+const our $DIRECTORY_OPTIONS       => {
   EXISTENCE_ONLY => 0,
   FILTER         => undef,
   NAME_PATTERN   => '.',
@@ -19,7 +19,13 @@ const our $COMPARE_DIRS_OPTIONS    => {
   SIZE_ONLY      => 0,
   SYMMETRIC      => 0,
 };
-const our $COMPARE_FILES_OPTIONS   => {
+const our $CONTAINER_OPTIONS       => {
+  %$DIRECTORY_OPTIONS,
+  FILE_LIST      => sub { [] },
+  GET_FILE       => sub {},
+  META_DATA      => sub {},
+};
+const our $FILE_OPTIONS            => {
   EXISTENCE_ONLY => 0,
   FILTER         => undef,
   SIZE_ONLY      => 0,

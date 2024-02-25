@@ -1,5 +1,8 @@
 Revision history for Perl extension Test::Files.
 
+0.22 2024-02-25
+    - Test on special devices skipped if they are not supported by the current OS or such devices do not exist.
+
 0.21 2024-02-24
     - Test on special devices skipped if they are not supported by the current OS.
 

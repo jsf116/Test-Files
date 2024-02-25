@@ -125,7 +125,7 @@ lines      = 9
 # Perl::Critic::Policy::InputOutput::RequireCheckedClose and
 # Perl::Critic::Policy::InputOutput::RequireCheckedOpen
 add_themes        = critic
-exclude_functions = print say
+exclude_functions = print say symlink
 functions         = :builtins
 
 [Perl::Critic::Policy::InputOutput::RequireEncodingWithUTF8Layer]

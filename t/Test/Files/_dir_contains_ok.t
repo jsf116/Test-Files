@@ -24,9 +24,11 @@ foreach my $file ( map { [ split( m{/} ) ] } @EXISTING_FILES ) {
 }
 
 const my $SPECIAL_FILE => 'special_file';
+
 SKIP: {
-  eval { symlink( '/dev/null', path( $TEMP_DIR )->child( $SPECIAL_FILE ) ) };
-  skip "$^O does not support symlinks" if $@;
+  const my $UNTESTABLE_OS => $^O eq 'MSWin32' || !path( '/dev/null' )->exists;
+  skip "$^O does not support special device files" if $UNTESTABLE_OS;
+  symlink( '/dev/null', path( $TEMP_DIR )->child( $SPECIAL_FILE ) );
 
   $expected = [
     [ sprintf( $FMT_FAILED_TO_SEE, path( $TEMP_DIR )->child( $MISSING_FILE ) ) ],

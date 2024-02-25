@@ -1,24 +1,25 @@
 package Test::Files;
 
-our $VERSION = '0.21';                                      ## no critic (RequireUseStrict, RequireUseWarnings)
+our $VERSION = '0.22';                                      ## no critic (RequireUseStrict, RequireUseWarnings)
 
 use strict;
 use warnings
   FATAL    => qw( all ),
   NONFATAL => qw( deprecated exec internal malloc newline portable recursion );
 
-use Cwd        qw( abs_path );
-use Exporter   qw( import );
-use Fcntl      qw( :mode );
-use Path::Tiny qw( path );
+use Cwd           qw( abs_path );
+use Data::Compare qw( Compare );
+use Exporter      qw( import );
+use Fcntl         qw( :mode );
+use Path::Tiny    qw( path );
 use Test::Builder;
-use Text::Diff qw( diff );
+use Text::Diff    qw( diff );
 
 use Test::Files::Constants qw(
-  $COMPARE_DIRS_OPTIONS $COMPARE_FILES_OPTIONS $EXPECTED_CONTENT
+  $CONTAINER_OPTIONS $DIRECTORY_OPTIONS $EXPECTED_CONTENT
   $FMT_ABSENT $FMT_ABSENT_WITH_ERROR $FMT_DIFFERENT_SIZE $FMT_FAILED_TO_SEE $FMT_FILTER_ISNT_CODEREF
   $FMT_FIRST_FILE_ABSENT $FMT_INVALID_ARGUMENT $FMT_INVALID_DIR $FMT_INVALID_NAME_PATTER $FMT_INVALID_OPTIONS
-  $FMT_SECOND_FILE_ABSENT $FMT_SUB_FAILED $FMT_UNDEF $FMT_UNEXPECTED $UNKNOWN %DIFF_OPTIONS
+  $FMT_SECOND_FILE_ABSENT $FMT_SUB_FAILED $FMT_UNDEF $FMT_UNEXPECTED $FILE_OPTIONS $UNKNOWN %DIFF_OPTIONS
 );
 
 ## no critic (ProhibitAutomaticExportation)
@@ -35,7 +36,7 @@ sub compare_dirs_filter_ok {
   my ( $got_dir, $expected_dir, $filter, $name ) = @_;
 
   my $options  = { FILTER => $filter };
-  my ( $diag ) = _validate_options( $options, $COMPARE_DIRS_OPTIONS );
+  my ( $diag ) = _validate_options( $options, $DIRECTORY_OPTIONS );
 
   return $diag ? _show_failure( $name, $diag ) : _compare_dirs( $got_dir, $expected_dir, $options, $name );
 }
@@ -43,7 +44,7 @@ sub compare_dirs_filter_ok {
 sub compare_dirs_ok {
   my ( $got_dir, $expected_dir, @rest ) = @_;
 
-  my ( $diag, $options, $name ) = _validate_trailing_args( \@rest, $COMPARE_DIRS_OPTIONS );
+  my ( $diag, $options, $name ) = _validate_trailing_args( \@rest, $DIRECTORY_OPTIONS );
 
   return $diag ? _show_failure( $name, $diag ) : _compare_dirs( $got_dir, $expected_dir, $options, $name );
 }
@@ -51,7 +52,7 @@ sub compare_dirs_ok {
 sub compare_filter_ok {
   my ( $got_file, $expected_file, $filter, $name ) = @_;
 
-  return _compare_ok( $got_file, $expected_file, { %$COMPARE_FILES_OPTIONS, FILTER => $filter }, $name );
+  return _compare_ok( $got_file, $expected_file, { %$FILE_OPTIONS, FILTER => $filter }, $name );
 }
 
 sub compare_ok { return _compare_ok( @_ ) }
@@ -59,7 +60,7 @@ sub compare_ok { return _compare_ok( @_ ) }
 sub dir_contains_ok {
   my ( $dir, $file_list, @rest ) = @_;
 
-  my ( $diag, $options, $name ) = _validate_trailing_args( \@rest, $COMPARE_DIRS_OPTIONS );
+  my ( $diag, $options, $name ) = _validate_trailing_args( \@rest, $DIRECTORY_OPTIONS );
 
   return _show_failure( $name, $diag ) if $diag;
 
@@ -71,7 +72,7 @@ sub dir_contains_ok {
 sub dir_only_contains_ok {
   my ( $dir, $file_list, @rest ) = @_;
 
-  my ( $diag, $options, $name ) = _validate_trailing_args( \@rest, $COMPARE_DIRS_OPTIONS );
+  my ( $diag, $options, $name ) = _validate_trailing_args( \@rest, $DIRECTORY_OPTIONS );
 
   return _show_failure( $name, $diag ) if $diag;
 
@@ -83,7 +84,7 @@ sub dir_only_contains_ok {
 sub file_filter_ok {
   my ( $file, $expected_string, $filter, $name ) = @_;
 
-  return _compare_ok( $file, \$expected_string, { %$COMPARE_FILES_OPTIONS, FILTER => $filter }, $name );
+  return _compare_ok( $file, \$expected_string, { %$FILE_OPTIONS, FILTER => $filter }, $name );
 }
 
 sub file_ok {
@@ -106,7 +107,7 @@ sub find_ok {
 sub _compare_dirs {
   my ( $got_dir, $expected_dir, @rest ) = @_;
 
-  my ( $diag, $options, $name ) = _validate_trailing_args( \@rest, $COMPARE_DIRS_OPTIONS );
+  my ( $diag, $options, $name ) = _validate_trailing_args( \@rest, $DIRECTORY_OPTIONS );
   return _show_failure( $name, $diag )                                                     if $diag;
   return _show_failure( $name, sprintf( $FMT_UNDEF, '$got_dir',      _get_caller_sub() ) ) unless defined( $got_dir );
   return _show_failure( $name, sprintf( $FMT_UNDEF, '$expected_dir', _get_caller_sub() ) ) unless defined( $expected_dir );
@@ -122,7 +123,7 @@ sub _compare_dirs {
   $got_dir      = path( $got_dir );
   $expected_dir = path( $expected_dir );
   foreach my $file ( @$file_list ) {
-    my $got_file      = $got_dir ->child( $file );
+    my $got_file      = $got_dir     ->child( $file );
     my $expected_file = $expected_dir->child( $file );
     my ( $error, $got_info, $expected_info ) = _get_two_files_info( $got_file, $expected_file, $options );
     push(
@@ -160,7 +161,7 @@ sub _compare_files {
 sub _compare_ok {
   my ( $got_file, $expected_file, @rest ) = @_;
 
-  my ( $diag, $options, $name ) = _validate_trailing_args( \@rest, $COMPARE_FILES_OPTIONS );
+  my ( $diag, $options, $name ) = _validate_trailing_args( \@rest, $FILE_OPTIONS );
   return _show_failure( $name, $diag )  if $diag;
 
   my ( $got, $expected );
@@ -294,7 +295,7 @@ sub _show_result {
 sub _validate_args {
   my ( $expected_type, $dir, $file_list_or_sub, @rest ) = @_;
 
-  my ( $diag, $options, $name ) = _validate_trailing_args( \@rest, $COMPARE_DIRS_OPTIONS );
+  my ( $diag, $options, $name ) = _validate_trailing_args( \@rest, $DIRECTORY_OPTIONS );
   return $diag if $diag;
 
   return sprintf( $FMT_UNDEF, '$dir', _get_caller_sub() ) unless defined( $dir );

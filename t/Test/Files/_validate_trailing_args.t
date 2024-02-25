@@ -5,12 +5,12 @@ use warnings
 
 use Test::Expander;
 
-use Test::Files::Constants qw( $COMPARE_DIRS_OPTIONS $FMT_INVALID_ARGUMENT );
+use Test::Files::Constants qw( $DIRECTORY_OPTIONS $FMT_INVALID_ARGUMENT );
 
 my ( $diag, %options );
 my $mockThis = mock $CLASS => ( override => [ _validate_options => sub { ( $diag, %options ) } ] );
 
-const my $DEFAULT => $COMPARE_DIRS_OPTIONS;
+const my $DEFAULT => $DIRECTORY_OPTIONS;
 my $expected;
 
 plan( 5 );

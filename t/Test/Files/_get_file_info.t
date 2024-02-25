@@ -18,57 +18,62 @@ $expected = [ sprintf( $FMT_UNDEF, '$file', $SUB ), undef ];
 is( [ $METHOD_REF->( undef, sub {}, '$file' ) ], $expected, 'file undefined' );
 
 const my $CONTENT => "line 0\nline 1\n";
-const my $FILE    => path( $TEMP_DIR )->child( 'file' );
 
-subtest 'file name supplied' => sub {
-  subtest 'file is absent' => sub {
-    plan( 3 );
+SKIP: {
+  const my $FILE          => path( $TEMP_DIR )->child( 'file' );
+  const my $UNTESTABLE_OS => $^O eq 'MSWin32' || !path( '/dev/null' )->exists;
+  skip "$^O does not support special device files" if $UNTESTABLE_OS;
 
-    $expected = [ sprintf( $FMT_ABSENT, $FILE ), undef ];
-    is( [ $METHOD_REF->( $FILE, {}, '$file' ) ], $expected, 'file does not exist' );
+  subtest 'file name supplied' => sub {
+    subtest 'file is absent' => sub {
+      plan( 3 );
 
-    subtest 'file is a cpecial one' => sub {
-      plan( 2 );
-      my $options;
+      $expected = [ sprintf( $FMT_ABSENT, $FILE ), undef ];
+      is( [ $METHOD_REF->( $FILE, {}, '$file' ) ], $expected, 'file does not exist' );
 
-      $options  = { EXISTENCE_ONLY => 0 };
-      $expected = [ sprintf( $FMT_ABSENT, '/dev/null' ), undef ];
-      is( [ $METHOD_REF->( '/dev/null', $options, '$file' ) ], $expected, 'get content' );
+      subtest 'file is a cpecial one' => sub {
+        plan( 2 );
+        my $options;
 
-      $options  = { EXISTENCE_ONLY => 1 };
-      $expected = [ undef, 1 ];
-      is( [ $METHOD_REF->( '/dev/null', $options, '$file' ) ], $expected, 'check existence' );
+        $options  = { EXISTENCE_ONLY => 0 };
+        $expected = [ sprintf( $FMT_ABSENT, '/dev/null' ), undef ];
+        is( [ $METHOD_REF->( '/dev/null', $options, '$file' ) ], $expected, 'get content' );
+
+        $options  = { EXISTENCE_ONLY => 1 };
+        $expected = [ undef, 1 ];
+        is( [ $METHOD_REF->( '/dev/null', $options, '$file' ) ], $expected, 'check existence' );
+      };
+
+      $expected = [ sprintf( $FMT_ABSENT, $TEMP_DIR ), undef ];
+      is( [ $METHOD_REF->( $TEMP_DIR, {}, '$file' ) ], $expected, 'file is a directory' );
     };
 
-    $expected = [ sprintf( $FMT_ABSENT, $TEMP_DIR ), undef ];
-    is( [ $METHOD_REF->( $TEMP_DIR,   {}, '$file' ) ], $expected, 'file is a directory' );
+    $FILE->spew( $CONTENT );
+
+    ok( [ $METHOD_REF->( $FILE, { EXISTENCE_ONLY => 1 }, '$file' ) ],       'file existence' );
+
+    $expected = [ undef, length( $CONTENT ) ];
+    is( [ $METHOD_REF->( $FILE, { SIZE_ONLY => 1 }, '$file' ) ], $expected, 'file size' );
+
+    subtest 'filter omitted, reading failed' => sub {
+      plan( 2 );
+      $FILE->chmod( 0 );
+
+      my $expected = sprintf( $FMT_ABSENT_WITH_ERROR, $FILE, '.+' );
+      my @got      = $METHOD_REF->( $FILE, {}, '$file' );
+      like( $got[ 0 ], qr/$expected/, 'error message' );
+      is  ( $got[ 1 ], undef,         'file content' );
+    };
+
+    $FILE->chmod( 'u+r' );
+    $expected = [ undef, "line 0\n" ];
+    is(
+      [ $METHOD_REF->( $FILE, { FILTER => sub { /0/ ? $_ : undef } }, '$file' ) ],
+      $expected,
+      'filter supplied, reading succeeded'
+    );
   };
-
-  $FILE->spew( $CONTENT );
-
-  ok( [ $METHOD_REF->( $FILE, { EXISTENCE_ONLY => 1 }, '$file' ) ],       'file existence' );
-
-  $expected = [ undef, length( $CONTENT ) ];
-  is( [ $METHOD_REF->( $FILE, { SIZE_ONLY => 1 }, '$file' ) ], $expected, 'file size' );
-
-  subtest 'filter omitted, reading failed' => sub {
-    plan( 2 );
-    $FILE->chmod( 0 );
-
-    my $expected = sprintf( $FMT_ABSENT_WITH_ERROR, $FILE, '.+' );
-    my @got      = $METHOD_REF->( $FILE, {}, '$file' );
-    like( $got[ 0 ], qr/$expected/, 'error message' );
-    is  ( $got[ 1 ], undef,         'file content' );
-  };
-
-  $FILE->chmod( 'u+r' );
-  $expected = [ undef, "line 0\n" ];
-  is(
-    [ $METHOD_REF->( $FILE, { FILTER => sub { /0/ ? $_ : undef } }, '$file' ) ],
-    $expected,
-    'filter supplied, reading succeeded'
-  );
-};
+}
 
 subtest 'scalar reference supplied' => sub {
   plan( 2 );

@@ -5,7 +5,7 @@ use warnings
 
 use Test::Expander -tempdir => {};
 
-use Test::Files::Constants qw( $COMPARE_DIRS_OPTIONS $FMT_SUB_FAILED );
+use Test::Files::Constants qw( $DIRECTORY_OPTIONS $FMT_SUB_FAILED );
 
 my $diag;
 my $sub = sub { path( shift )->basename eq 'GOOD' };
@@ -17,7 +17,7 @@ my $mockThis = mock $CLASS => (
       is( $_[ 2 ], $expected, 'Negative results reported' );
       return;
     },
-    _validate_args => sub { shift; ( $diag, path( shift ), shift, $COMPARE_DIRS_OPTIONS ) },
+    _validate_args => sub { shift; ( $diag, path( shift ), shift, $DIRECTORY_OPTIONS ) },
   ]
 );
 
