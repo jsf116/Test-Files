@@ -1,5 +1,8 @@
 Revision history for Perl extension Test::Files.
 
+0.23 2024-02-25
+    - Fixed list of required modules.
+
 0.22 2024-02-25
     - Test on special devices skipped if they are not supported by the current OS or such devices do not exist.
 

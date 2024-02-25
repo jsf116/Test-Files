@@ -16,6 +16,7 @@ WriteMakefile(
 	PREREQ_PM        => {
 		'Const::Fast'    => 0,
 		'Cwd'            => 0,
+		'Data::Compare'  => 0,
 		'Exporter'       => 0,
 		'Fcntl'          => 0,
 		'PadWalker'      => 0,
