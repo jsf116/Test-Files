@@ -1,4 +1,4 @@
-# This example implements all test cases mentioned in SYNOPSIS.
+# This implements all test cases mentioned in SYNOPSIS.
 # To make it runnable, the following changes have been done:
 #   - Test::Expander used instead of Path::Tiny (this includes both Path::Tiny and Test2::V0).
 #   - $PATH referring to a temporary directory used instead of path( 'path' ).
@@ -156,6 +156,6 @@ compare_dirs_filter_ok(
 # Verifies if all plain files in directory and its subdirectories contain the word 'good'
 # (take into consideration the -f test below excluding special files from comparison!):
 $got_dir->visit( sub { $_->spew( 'This is a good plain file!' ) unless $_->is_dir }, { recurse => 1 } );
-$content_check = sub { my ( $file ) = @_; ! -f $file or path( $file )->slurp =~ / \b good \b /x };
+$content_check = sub { my ( $file ) = @_; not -f $file or path( $file )->slurp =~ / \b good \b /x };
 $options       = { RECURSIVE => 1 };
 find_ok( $got_dir, $content_check, $options, "all files from '$got_dir' and subdirectories contain the word 'good'" );
