@@ -38,6 +38,7 @@
             "Data::Compare" : "0",
             "Exporter" : "0",
             "Fcntl" : "0",
+            "File::chdir" : "0",
             "PadWalker" : "0",
             "Path::Tiny" : "0.144",
             "Test::Builder" : "0",

@@ -7,31 +7,52 @@ use warnings
   FATAL    => qw( all ),
   NONFATAL => qw( deprecated exec internal malloc newline portable recursion );
 
-use Class::XSAccessor accessors => [ qw( diag expected got name options ) ], chained => 1;
-use Cwd               qw( abs_path );
-use Data::Compare     qw( Compare );
-use Exporter          qw( import );
-use Fcntl             qw( :mode );
-use Path::Tiny        qw( path );
+use Class::XSAccessor accessors => [ qw( base diag expected got name options ) ], chained => 1;
+use Cwd                   qw( abs_path );
+use Data::Compare         qw( Compare );
+use Exporter              qw( import );
+use Fcntl                 qw( :mode );
+use File::chdir;
+use Path::Tiny            qw( path );
 use Test::Builder;
-use Text::Diff        qw( diff );
+use Test2::Tools::Compare qw( is );
+use Text::Diff            qw( diff );
 
 use Test::Files::Constants qw(
-  $CONTAINER_OPTIONS $DIRECTORY_OPTIONS $EXPECTED_CONTENT
-  $FMT_ABSENT $FMT_ABSENT_WITH_ERROR $FMT_DIFFERENT_SIZE $FMT_FAILED_TO_SEE $FMT_FILTER_ISNT_CODEREF
-  $FMT_FIRST_FILE_ABSENT $FMT_INVALID_ARGUMENT $FMT_INVALID_DIR $FMT_INVALID_NAME_PATTER $FMT_INVALID_OPTIONS
-  $FMT_SECOND_FILE_ABSENT $FMT_SUB_FAILED $FMT_UNDEF $FMT_UNEXPECTED $FILE_OPTIONS $UNKNOWN %DIFF_OPTIONS
+  $ARCHIVE_OPTIONS $DIRECTORY_OPTIONS $EXPECTED_CONTENT
+  $FMT_ABSENT $FMT_ABSENT_WITH_ERROR $FMT_CANNOT_CREATE_DIR $FMT_CANNOT_EXTRACT $FMT_CANNOT_GET_METADATA
+  $FMT_DIFFERENT_SIZE $FMT_FAILED_TO_SEE $FMT_FILTER_ISNT_CODEREF $FMT_FIRST_FILE_ABSENT $FMT_INVALID_ARGUMENT
+  $FMT_INVALID_DIR $FMT_INVALID_NAME_PATTER $FMT_INVALID_OPTIONS $FMT_SECOND_FILE_ABSENT $FMT_SUB_FAILED $FMT_UNDEF
+  $FMT_UNEXPECTED $FILE_OPTIONS $UNKNOWN
+  %DIFF_OPTIONS
 );
 
 ## no critic (ProhibitAutomaticExportation)
 our @EXPORT = qw(
+  compare_archives_ok
   compare_dirs_filter_ok compare_dirs_ok
   compare_filter_ok compare_ok
   dir_contains_ok dir_only_contains_ok
-  file_filter_ok file_ok find_ok
+  file_filter_ok file_ok
+  find_ok
 );
 
 my $Test = Test::Builder->new;
+
+sub compare_archives_ok {
+  my ( $got_archive, $expected_archive, @rest ) = @_;
+
+  my $self = __PACKAGE__->_init->got( $got_archive )->expected( $expected_archive )
+    ->_validate_trailing_args( \@rest, $ARCHIVE_OPTIONS );
+
+  return $self->_show_failure if @{ $self->diag } || @{ $self->_compare_metadata->diag };
+
+  $self->_extract->diag;
+  return 0 unless defined( $self->diag );                   # Special handling of metadata difference
+  return $self->_show_failure if @{ $self->diag };
+
+  return $self->_compare_dirs;
+}
 
 sub compare_dirs_filter_ok {
   my ( $got_dir, $expected_dir, $filter, $name ) = @_;
@@ -140,7 +161,8 @@ sub _compare_dirs {
     my $got_file      = $got_dir     ->child( $file );
     my $expected_file = $expected_dir->child( $file );
     my ( $got_info, $expected_info ) = $self->_get_two_files_info( $got_file, $expected_file );
-    $self->_compare_files( $got_info, $expected_info, $got_file, $expected_file ) unless @{ $self->diag };
+    $self->_compare_files( $got_info, $expected_info, $self->_relative( $got_file ), $self->_relative( $expected_file ) )
+      unless @{ $self->diag };
     push( @diag, @{ $self->diag } );
   }
   $self->diag( \@diag );
@@ -173,6 +195,21 @@ sub _compare_files {
   $self->diag( [ $diff ] ) if $diff ne '';
 
   return $self;
+}
+
+sub _compare_metadata {
+  my ( $self ) = @_;
+
+  my $got_metadata = eval { $self->options->{ META_DATA }->( $self->got ) };
+  return $self->diag( [ sprintf( $FMT_CANNOT_GET_METADATA, $self->got, $@ ) ] ) if $@;
+
+  my $expected_metadata = eval { $self->options->{ META_DATA }->( $self->expected ) };
+  return $self->diag( [ sprintf( $FMT_CANNOT_GET_METADATA, $self->expected, $@ ) ] ) if $@;
+
+  return $self if Compare( $got_metadata, $expected_metadata );
+
+  is( $got_metadata, $expected_metadata, $self->name );
+  return $self->diag( undef );
 }
 
 sub _compare_ok {
@@ -216,9 +253,9 @@ sub _dir_contains_ok {
     my ( $file ) = @_;
 
     my $file_stat = eval { $file->stat };
-    return push( @$diag, sprintf( $FMT_ABSENT, $file ) ) unless $file_stat;
+    return push( @$diag, sprintf( $FMT_ABSENT, $self->_relative( $file ) ) ) unless $file_stat;
     return if S_ISDIR( $file_stat->mode );
-    return push( @$diag, sprintf( $FMT_ABSENT, $file ) ) if $file_stat->rdev && !$existence_only;
+    return push( @$diag, sprintf( $FMT_ABSENT, $self->_relative( $file ) ) ) if $file_stat->rdev && !$existence_only;
 
     my $relative_name = $file->relative( $dir );
     if ( exists( $file_list{ $relative_name } ) ) {
@@ -227,15 +264,33 @@ sub _dir_contains_ok {
       return;
     }
 
-    return push( @$diag, sprintf( $FMT_UNEXPECTED, $file ) ) if $symmetric;
+    return push( @$diag, sprintf( $FMT_UNEXPECTED, $self->_relative( $file ) ) ) if $symmetric;
 
     return;
   };
   path( abs_path( $self->got ) )->visit( $matches, { recurse => $options->{ RECURSIVE } } );
-  push( @$diag, sprintf( $FMT_FAILED_TO_SEE, $dir->child( $_ ) ) ) foreach grep { /$name_pattern/ } keys( %file_list );
+  push( @$diag, sprintf( $FMT_FAILED_TO_SEE, $self->_relative( $dir->child( $_ ) ) ) )
+    foreach grep { /$name_pattern/ } keys( %file_list );
   $self->diag( [ sort @$diag ] );
 
   return [ sort @$detected ];
+}
+
+sub _extract {
+  my ( $self ) = @_;
+
+  $self->base( Path::Tiny->tempdir );
+  foreach my $archive ( $self->got, $self->expected ) {
+    my $base       = $self->base;
+    my $targetPath = eval { $base->child( $archive )->mkdir };
+    return $self->diag( [ sprintf( $FMT_CANNOT_CREATE_DIR, $base->child( $archive ), $@ ) ] ) if $@;
+
+    local $CWD = $targetPath;
+    eval { $self->options->{ EXTRACT }->( $archive ) };
+    return $self->diag( [ sprintf( $FMT_CANNOT_EXTRACT, $archive, $base->child( $archive ), $@ ) ] ) if $@;
+  }
+
+  return $self;
 }
 
 sub _get_caller_sub {                                       # Identify closest public caller subroutine
@@ -294,6 +349,12 @@ sub _init {
   my ( $class ) = @_;
 
   return bless( { diag => [], name => '', options => {} }, $class );
+}
+
+sub _relative {
+  my ( $self, $file ) = @_;
+
+  return defined( $self->base ) ? path( $file )->relative( $self->base ) : $file ;
 }
 
 sub _show_failure {
