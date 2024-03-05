@@ -48,6 +48,7 @@
       },
       "test" : {
          "requires" : {
+            "Archive::Zip" : "0",
             "File::Copy::Recursive" : "0",
             "FindBin" : "0",
             "Test::Expander" : "0",

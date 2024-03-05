@@ -51,6 +51,7 @@ sub compare_archives_ok {
   return 0 unless defined( $self->diag );                   # Special handling of metadata difference
   return $self->_show_failure if @{ $self->diag };
 
+  map { delete( $self->options->{ $_ } ) unless exists( $DIRECTORY_OPTIONS->{ $_ } ) } keys( %{ $self->options } );
   return $self->_compare_dirs;
 }
 
@@ -285,10 +286,12 @@ sub _extract {
     my $targetPath = eval { $base->child( $archive )->mkdir };
     return $self->diag( [ sprintf( $FMT_CANNOT_CREATE_DIR, $base->child( $archive ), $@ ) ] ) if $@;
 
-    local $CWD = $targetPath;
+    local $CWD = $targetPath;                               ## no critic (ProhibitLocalVars)
     eval { $self->options->{ EXTRACT }->( $archive ) };
     return $self->diag( [ sprintf( $FMT_CANNOT_EXTRACT, $archive, $base->child( $archive ), $@ ) ] ) if $@;
   }
+
+  $self->$_( $self->base->child( $self->$_ ) ) foreach qw( got expected );
 
   return $self;
 }
