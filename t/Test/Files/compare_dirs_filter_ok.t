@@ -7,7 +7,7 @@ use Test::Expander;
 
 plan( 2 );
 
-subtest 'success' => sub {
+subtest success => sub {
   plan( 2 );
 
   my $mock_this = mock $CLASS => (
@@ -20,7 +20,7 @@ subtest 'success' => sub {
   lives_ok { $METHOD_REF->( 'first_dir', 'second_dir', sub {} ) } 'executed';
 };
 
-subtest 'failure' => sub {
+subtest failure => sub {
   plan( 2 );
 
   my $mock_this = mock $CLASS => (

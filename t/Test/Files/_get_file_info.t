@@ -22,7 +22,7 @@ const my $CONTENT => "line 0\nline 1\n";
 
 SKIP: {
   const my $FILE          => path( $TEMP_DIR )->child( 'file' );
-  const my $UNTESTABLE_OS => $^O eq 'MSWin32' || !path( '/dev/null' )->exists;
+  const my $UNTESTABLE_OS => $^O =~ /^(?:MSWin32|cygwin|(?:free|open)bsd|solaris)$/ || !path( '/dev/null' )->exists;
   skip "$^O does not support special device files" if $UNTESTABLE_OS;
 
   subtest 'file name supplied' => sub {

@@ -7,7 +7,7 @@ use Test::Expander;
 
 plan( 2 );
 
-subtest 'success' => sub {
+subtest success => sub {
   plan( 3 );
 
   my $mock_this = mock $CLASS => (
@@ -15,14 +15,14 @@ subtest 'success' => sub {
       _compare_dirs           => sub { pass( 'content compared' ) },
       _compare_metadata       => sub { pass( 'metadata compared' ); shift },
       _extract                => sub { shift },
-      _validate_trailing_args => sub { shift },
+      _validate_trailing_args => sub { my ( $self ) = @_; $self->options( { EXTRACT => sub {}, FILTER => qr/./ } ) },
     ]
   );
 
   ok( $METHOD_REF->( 'got_archive', 'reference_archive' ), 'executed' );
 };
 
-subtest 'failure' => sub {
+subtest failure => sub {
   plan( 4 );
 
   subtest 'invalid arguments' => sub {

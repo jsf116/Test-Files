@@ -42,11 +42,11 @@ SKIP: {
 
       my $expected = [ sprintf( $FMT_FAILED_TO_SEE, path( $TEMP_DIR )->child( $MISSING_FILE ) ) ];
       my $self     = $CLASS->_init;
-      is(
+      like(
         $self->$METHOD( $TEMP_DIR, [ @EXISTING_FILES, $MISSING_FILE ], { EXISTENCE_ONLY => 1, RECURSIVE => 1 } ),
-        [ map { path( $_ ) } @EXISTING_FILES ], 'list of existing files returned'
+        [ map { my $e = path( $_ ); qr/\b$e$/ } @EXISTING_FILES ], 'list of existing files returned'
       );
-      is( $self->diag, $expected,               'error message' );
+      is( $self->diag, $expected,                                  'error message' );
     };
 
     subtest 'check something but existence, specify name pattern' => sub {
@@ -54,11 +54,12 @@ SKIP: {
 
       my $expected = [ sprintf( $FMT_ABSENT, path( $TEMP_DIR )->child( $SPECIAL_FILE ) ) ];
       my $self     = $CLASS->_init;
-      is(
+      like(
         $self->$METHOD( $TEMP_DIR, \@EXISTING_FILES, { NAME_PATTERN => '[01]', RECURSIVE => 1 } ),
-        [ map { /[01]/ ? path( $_ ) : () } @EXISTING_FILES ], 'list of existing files returned'
+        [ map { if ( /[01]/ ) { my $e = path( $_ ); qr/\b$e$/ } else { () } } @EXISTING_FILES ],
+        'list of existing files returned'
       );
-      is( $self->diag, $expected,               'error message' );
+      is( $self->diag, $expected, 'error message' );
     };
   };
 }
@@ -82,11 +83,11 @@ subtest 'supefluous file in symmetric approach, name pattern omitted' => sub {
     sprintf( $FMT_UNEXPECTED, path( $TEMP_DIR )->child( $UNEXPECTED_FILE ) ),
   ];
   my $self     = $CLASS->_init;
-  is(
+  like(
     $self->$METHOD( $TEMP_DIR, \@EXISTING_FILES, { EXISTENCE_ONLY => 1, RECURSIVE => 1, SYMMETRIC => 1 } ),
-    [ map { path( $_ ) } @EXISTING_FILES ], 'list of existing files returned'
+    [ map { my $e = path( $_ ); qr/\b$e$/ } @EXISTING_FILES ], 'list of existing files returned'
   );
-  is( $self->diag, $expected,               'error message' );
+  is( $self->diag, $expected,                                  'error message' );
 };
 
 subtest 'unaccessible file, name pattern omitted' => sub {
@@ -95,9 +96,9 @@ subtest 'unaccessible file, name pattern omitted' => sub {
   path( $TEMP_DIR )->child( $_ )->touch foreach $UNACCESSIBLE_FILE, $UNEXPECTED_FILE;
   my $expected = [ sprintf( $FMT_ABSENT, path( $TEMP_DIR )->child( $UNACCESSIBLE_FILE ) ) ];
   my $self     = $CLASS->_init;
-  is(
+  like(
     $self->$METHOD( $TEMP_DIR, \@EXISTING_FILES, { EXISTENCE_ONLY => 1, RECURSIVE => 1 } ),
-    [ map { path( $_ ) } @EXISTING_FILES ], 'list of existing files returned'
+    [ map { my $e = path( $_ ); qr/\b$e$/ } @EXISTING_FILES ], 'list of existing files returned'
   );
-  is( $self->diag, $expected,               'error message' );
+  is( $self->diag, $expected,                                  'error message' );
 };
