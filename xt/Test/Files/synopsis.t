@@ -161,7 +161,7 @@ $content_check = sub { my ( $file ) = @_; not -f $file or path( $file )->slurp =
 $options       = { RECURSIVE => 1 };
 find_ok( $got_dir, $content_check, $options, "all files from '$got_dir' and subdirectories contain the word 'good'" );
 
-# Compares PKZIP archives considering global and file comments.
+# Compares PKZIP archives considering both global and file comments.
 # Both archives contain the same members in different order:
 my @fileNos = ( 0, 1 );
 foreach my $archive ( $got_file, $reference_file ) {
